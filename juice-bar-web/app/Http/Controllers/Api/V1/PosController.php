@@ -30,6 +30,8 @@ class PosController extends Controller
             'ice_levels' => config('pos.ice_levels'),
             'default_ice' => config('pos.default_ice'),
             'max_quantity' => config('pos.max_quantity_per_line'),
+            // Words for receipts the app prints itself (offline orders).
+            'receipt_labels' => config('pos.receipt_labels.'.config('pos.receipt_language', 'bn')) ?? config('pos.receipt_labels.en'),
             'categories' => $categories,
             'products' => $menu->products($categories),
             'payment_methods' => $menu->methods(),

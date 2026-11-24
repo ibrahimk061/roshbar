@@ -34,6 +34,7 @@
 | Website | View only: no ordering and no contact form (owner, 2026-11-24) | — |
 | App sign-in | Sanctum token per device, 90 days, same 5-try lockout as the website; switched-off staff lose their token | `Api\V1\AuthController` |
 | App receipts | Server sends ready-to-print lines (32 / 21 columns); the app only prints them | `ReceiptLines` |
+| Language | Drink names on POS, orders, reports and receipts are Bangla (`name_bn`, English if missing); receipt words Bangla; website opens in Bangla (owner, 2026-11-24). POS buttons stay English. `POS_ITEM_LANG`, `POS_RECEIPT_LANG`, `SITE_DEFAULT_LANG` switch back to `en` | `config/pos.php`, `config/site.php` |
 | Live data | Old site's `.env` and database are never changed; import only reads | — |
 
 ## Open questions for the owner

@@ -3,7 +3,7 @@
 // Public website (roshbar.com)
 return [
     'name' => env('SITE_NAME', 'Roshbar'),
-    'default_lang' => env('SITE_DEFAULT_LANG', 'en'),
+    'default_lang' => env('SITE_DEFAULT_LANG', 'bn'),
 
     // Read-only connection to the old roshbar.com database, used only by
     // `php artisan roshbar:import-legacy`. Fill these on the server from the

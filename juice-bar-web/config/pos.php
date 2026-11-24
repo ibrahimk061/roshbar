@@ -31,4 +31,30 @@ return [
         'dine_in' => 'Dine-in',
     ],
     'max_quantity_per_line' => 99,
+
+    // Language of drink names on the POS, orders, reports and receipts:
+    // 'bn' = Bangla name (falls back to English when a drink has none), 'en' = English.
+    'item_language' => env('POS_ITEM_LANG', 'bn'),
+
+    // Language of the words printed on receipts (web print and SUNMI).
+    'receipt_language' => env('POS_RECEIPT_LANG', 'bn'),
+
+    'receipt_labels' => [
+        'en' => [
+            'phone' => 'Phone', 'type' => 'Type', 'served_by' => 'Served by', 'sugar' => 'Sugar',
+            'subtotal' => 'Subtotal', 'discount' => 'Discount', 'vat' => 'VAT', 'incl' => 'incl.',
+            'total' => 'TOTAL', 'cash_received' => 'Cash received', 'change' => 'CHANGE', 'due' => 'DUE',
+            'paid' => 'PAID', 'cancelled' => '*** CANCELLED ***', 'items' => 'Items', 'currency' => 'Tk',
+            'order_types' => ['takeaway' => 'Takeaway', 'dine_in' => 'Dine-in'],
+            'ice_levels' => ['no_ice' => 'No Ice', 'less_ice' => 'Less Ice', 'regular' => 'Regular Ice'],
+        ],
+        'bn' => [
+            'phone' => 'ফোন', 'type' => 'ধরন', 'served_by' => 'সার্ভ করেছেন', 'sugar' => 'চিনি',
+            'subtotal' => 'মোট দাম', 'discount' => 'ছাড়', 'vat' => 'ভ্যাট', 'incl' => 'সহ',
+            'total' => 'সর্বমোট', 'cash_received' => 'নগদ গ্রহণ', 'change' => 'ফেরত', 'due' => 'বাকি',
+            'paid' => 'পরিশোধিত', 'cancelled' => '*** বাতিল ***', 'items' => 'আইটেম', 'currency' => '৳',
+            'order_types' => ['takeaway' => 'পার্সেল', 'dine_in' => 'দোকানে বসে'],
+            'ice_levels' => ['no_ice' => 'বরফ ছাড়া', 'less_ice' => 'কম বরফ', 'regular' => 'স্বাভাবিক বরফ'],
+        ],
+    ],
 ];
