@@ -15,7 +15,7 @@ class StoreOrderRequest extends FormRequest
     public function rules(): array
     {
         // The quote endpoint sends the same cart without uuid/payments.
-        $isQuote = $this->routeIs('orders.quote');
+        $isQuote = $this->routeIs('orders.quote', 'api.v1.orders.quote');
 
         return [
             'uuid' => [$isQuote ? 'nullable' : 'required', 'uuid'],

@@ -14,6 +14,11 @@ class EnsureActiveUser
     {
         $user = $request->user();
         if ($user && $user->is_active === false) {
+            // App (token) sign-in: no session to clear, so remove the token.
+            if (! $request->hasSession()) {
+                $user->currentAccessToken()?->delete();
+                abort(401, 'Your account is switched off.');
+            }
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();

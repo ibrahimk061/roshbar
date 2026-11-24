@@ -32,6 +32,8 @@
 | Activity log | Owner-only page; failed logins logged only for existing accounts; no deletes | `ActivityLogger` |
 | Offline orders | Kept in the browser (localStorage) per device; number given on sync; business date from the time taken (trusted ≤ 3 days back) | `pos.js`, `OrderService::offlineTime` |
 | Website | View only: no ordering and no contact form (owner, 2026-11-24) | — |
+| App sign-in | Sanctum token per device, 90 days, same 5-try lockout as the website; switched-off staff lose their token | `Api\V1\AuthController` |
+| App receipts | Server sends ready-to-print lines (32 / 21 columns); the app only prints them | `ReceiptLines` |
 | Live data | Old site's `.env` and database are never changed; import only reads | — |
 
 ## Open questions for the owner

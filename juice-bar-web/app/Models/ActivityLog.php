@@ -14,6 +14,8 @@ class ActivityLog extends Model
         'login' => 'Signed in',
         'login.failed' => 'Wrong password',
         'logout' => 'Signed out',
+        'app.login' => 'Signed in on the app',
+        'app.logout' => 'Signed out of the app',
         'password.change' => 'Changed own password',
         'order.discount' => 'Gave a discount',
         'order.cancel' => 'Cancelled an order',

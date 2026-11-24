@@ -83,6 +83,13 @@ The owner dropped ingredients, recipes and stock ("only items, price, qty") and 
 - The pill at the top of the cart shows Offline / To send / Sending with a count.
 - 80 automated tests.
 
+## 🟡 Phase 8 — API v1 + SUNMI V2s app (in progress)
+
+- API v1 for the app is done: token sign-in, menu, quote, place order (safe to retry), today's orders, receipt lines. See [API.md](API.md).
+- The web POS and the app share one menu builder (`PosMenu`), so both always show the same items.
+- Receipt lines for the built-in printer are made on the server (`ReceiptLines`).
+- Android app: next.
+
 ## Next phases
 
 | # | Phase | Main items |
