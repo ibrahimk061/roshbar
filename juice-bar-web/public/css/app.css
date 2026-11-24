@@ -116,3 +116,8 @@ body { background: var(--jb-bg); color: var(--jb-text); }
     .navbar .nav-link > .bi { display: none; }
     .navbar .navbar-nav .nav-link { padding-left: .5rem; padding-right: .5rem; }
 }
+
+/* Offline */
+.net-pill { white-space: nowrap; }
+.pos-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 2000; background: #0E4D2C; color: #fff;
+    padding: .6rem 1rem; border-radius: 999px; box-shadow: 0 6px 20px rgba(0,0,0,.2); font-weight: 600; }

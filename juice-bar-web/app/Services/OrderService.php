@@ -10,6 +10,8 @@ use App\Models\User;
 use App\Support\Money;
 use Brick\Math\BigDecimal;
 use Brick\Math\RoundingMode;
+use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -54,7 +56,8 @@ class OrderService
                 return $existing;
             }
 
-            $businessDate = BusinessDate::for(now());
+            $takenAt = $this->offlineTime($data['created_offline_at'] ?? null);
+            $businessDate = BusinessDate::for($takenAt ?? now());
             $issued = $this->numbers->next($businessDate);
 
             $order = Order::query()->create([
@@ -75,7 +78,13 @@ class OrderService
                 'grand_total' => Money::str($t['grand']),
                 'note' => $data['note'] ?? null,
                 'user_id' => $user?->id,
+                'was_offline' => ! empty($data['created_offline_at']),
+                'synced_at' => ! empty($data['created_offline_at']) ? now() : null,
             ]);
+            if ($takenAt) {
+                // Keep the real time the order was taken (reports and receipts use it).
+                $order->forceFill(['created_at' => $takenAt])->save();
+            }
 
             foreach ($lines as $line) {
                 $item = $order->items()->create([
@@ -105,6 +114,27 @@ class OrderService
 
             return $order->refresh();
         });
+    }
+
+    /**
+     * Time an offline order was taken. Trusted only within the last 3 days and not in
+     * the future (5 min clock slack); otherwise the order counts as taken now.
+     */
+    private function offlineTime(?string $value): ?CarbonInterface
+    {
+        if (! $value) {
+            return null;
+        }
+        try {
+            $at = CarbonImmutable::parse($value)->utc();
+        } catch (\Throwable) {
+            return null;
+        }
+        if ($at->gt(now()->addMinutes(5)) || $at->lt(now()->subDays(3))) {
+            return null;
+        }
+
+        return $at->min(now());
     }
 
     /** Take (more) payment for an existing open order, e.g. dine-in paying at the end. */

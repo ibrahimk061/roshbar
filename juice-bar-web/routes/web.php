@@ -38,6 +38,8 @@ Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth')->
 /* ---------- POS: every active staff member ---------- */
 Route::middleware('auth')->group(function () {
     Route::get('/pos', [PosController::class, 'index'])->name('pos');
+    // Fresh CSRF token for sending offline orders after the page's token expired.
+    Route::get('/pos/csrf', fn () => response()->json(['token' => csrf_token()]))->name('pos.csrf');
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
     Route::post('/orders/quote', [OrderController::class, 'quote'])->name('orders.quote');

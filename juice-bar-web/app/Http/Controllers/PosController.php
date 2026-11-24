@@ -50,6 +50,7 @@ class PosController extends Controller
             'businessName' => Setting::get('business_name', config('pos.business_name')),
             'methods' => PaymentMethod::query()->active()->get(['code', 'name', 'is_cash', 'requires_reference']),
             'vatRate' => (string) Setting::get('vat_rate', '0'),
+            'vatInclusive' => (bool) Setting::get('vat_inclusive', false),
             'heldCount' => HeldCart::query()->count(),
         ]);
     }
