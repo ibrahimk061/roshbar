@@ -35,7 +35,7 @@
                 @foreach ($order->items as $item)
                     <tr>
                         <td><div class="fw-semibold">{{ $item->product_name }} <span class="text-muted fw-normal">({{ $item->variant_name }})</span></div>
-                            <div class="small text-muted">Sugar {{ $item->sugar ?? '-' }}% · {{ config('pos.ice_levels.'.$item->ice, $item->ice) }}@foreach ($item->addons as $a) · + {{ $a->addon_name }}@endforeach</div>
+                            <div class="small text-muted">{{ collect([$item->sugar !== null ? 'Sugar '.$item->sugar.'%' : null, $item->ice ? config('pos.ice_levels.'.$item->ice, $item->ice) : null])->merge($item->addons->map(fn ($a) => '+ '.$a->addon_name))->filter()->implode(' · ') }}</div>
                             @if ($item->note)<div class="small fst-italic">“{{ $item->note }}”</div>@endif</td>
                         <td class="text-center">{{ $item->quantity }}</td>
                         <td class="text-end money">{{ Money::format($item->line_total) }}</td>

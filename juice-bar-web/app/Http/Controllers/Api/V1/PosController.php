@@ -25,6 +25,7 @@ class PosController extends Controller
             'vat_rate' => $menu->vatRate(),
             'vat_inclusive' => $menu->vatInclusive(),
             'order_types' => config('pos.order_types'),
+            'ask_sugar_ice' => (bool) config('pos.ask_sugar_ice'),
             'sugar_levels' => config('pos.sugar_levels'),
             'default_sugar' => config('pos.default_sugar'),
             'ice_levels' => config('pos.ice_levels'),

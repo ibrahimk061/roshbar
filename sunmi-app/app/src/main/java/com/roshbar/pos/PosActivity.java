@@ -285,8 +285,9 @@ public class PosActivity extends Activity {
         final JSONArray addons = pr.optJSONArray("addons");
         final long[] variant = {variants.optJSONObject(0).optLong("id")};
         for (int i = 0; i < variants.length(); i++) if (variants.optJSONObject(i).optBoolean("default")) variant[0] = variants.optJSONObject(i).optLong("id");
-        final String[] sugar = {menu.optString("default_sugar", "100")};
-        final String[] ice = {menu.optString("default_ice", "regular")};
+        final boolean askSugarIce = menu.optBoolean("ask_sugar_ice", false);
+        final String[] sugar = {askSugarIce ? menu.optString("default_sugar", "100") : null};
+        final String[] ice = {askSugarIce ? menu.optString("default_ice", "regular") : null};
         final List<Long> picked = new ArrayList<>();
         final int[] qty = {1};
 
@@ -308,6 +309,7 @@ public class PosActivity extends Activity {
             }
         }
 
+        if (askSugarIce) {
         box.addView(Ui.label(this, "Sugar"));
         JSONArray sugars = menu.optJSONArray("sugar_levels");
         List<Button> sg = new ArrayList<>();
@@ -339,6 +341,7 @@ public class PosActivity extends Activity {
                 ig.add(b);
                 irow = addWrapped(box, irow, b);
             }
+        }
         }
 
         if (addons != null && addons.length() > 0) {

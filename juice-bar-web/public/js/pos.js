@@ -86,11 +86,13 @@
 
   function openItem(p) {
     const def = p.variants.find((v) => v.default) || p.variants[0];
-    draft = { product: p, variant_id: def.id, sugar: P.defaultSugar, ice: P.defaultIce, addon_ids: [], quantity: 1, note: '' };
+    draft = { product: p, variant_id: def.id, sugar: P.askSugarIce ? P.defaultSugar : null, ice: P.askSugarIce ? P.defaultIce : null, addon_ids: [], quantity: 1, note: '' };
     $('#im-title').textContent = p.name;
     $('#im-variants').innerHTML = p.variants.map((v) => chip('v', 'radio', v.id, `${esc(v.name)}<br><small class="money">৳ ${fmt(toPaisa(v.price))}</small>`, v.id === def.id)).join('');
+    if (P.askSugarIce) {
     $('#im-sugar').innerHTML = P.sugarLevels.map((s) => chip('s', 'radio', s, `${s}%`, s === draft.sugar)).join('');
     $('#im-ice').innerHTML = Object.entries(P.iceLevels).map(([k, l]) => chip('i', 'radio', k, esc(l), k === draft.ice)).join('');
+    }
     $('#im-addons-wrap').hidden = !p.addons.length;
     $('#im-addons').innerHTML = p.addons.map((a) => chip('a', 'checkbox', a.id, `${esc(a.name)} <small class="money">+৳${fmt(toPaisa(a.price))}</small>`, false)).join('');
     $('#im-note').value = '';
@@ -153,7 +155,7 @@
     } else {
       box.innerHTML = state.lines.map((l, i) => {
         const x = lineView(l); total += x.total; count += l.quantity;
-        const meta = [`Sugar ${l.sugar}%`, P.iceLevels[l.ice]].concat(x.addons.map((a) => '+ ' + a.name));
+        const meta = [l.sugar != null ? `Sugar ${l.sugar}%` : null, l.ice ? P.iceLevels[l.ice] : null].filter(Boolean).concat(x.addons.map((a) => '+ ' + a.name));
         return `<div class="cart-line" data-i="${i}">
           <div class="d-flex justify-content-between gap-2">
             <div><div class="fw-semibold">${esc(x.p.name)} <span class="text-muted fw-normal">(${esc(x.v.name)})</span></div>
