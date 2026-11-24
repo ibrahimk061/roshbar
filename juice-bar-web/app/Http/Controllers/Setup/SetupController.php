@@ -72,7 +72,7 @@ class SetupController extends Controller
         };
 
         $row(version_compare(PHP_VERSION, '8.3.0', '>='), 'PHP '.PHP_VERSION, 'Choose PHP 8.3 or 8.4 in cPanel > MultiPHP Manager');
-        foreach (['pdo_mysql', 'mbstring', 'openssl', 'tokenizer', 'xml', 'ctype', 'json', 'bcmath', 'fileinfo', 'zlib'] as $ext) {
+        foreach (['pdo_mysql', 'mbstring', 'openssl', 'tokenizer', 'xml', 'ctype', 'json', 'fileinfo', 'zlib'] as $ext) {
             $row(extension_loaded($ext), 'PHP extension '.$ext, 'Turn it on in cPanel > Select PHP Version > Extensions');
         }
         $row(app()->environment('production'), 'APP_ENV=production', 'Set APP_ENV=production in .env');
