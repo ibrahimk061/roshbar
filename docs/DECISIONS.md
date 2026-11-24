@@ -1,0 +1,25 @@
+# Decisions and open questions
+
+## Defaults used in slice 1 (change any of these on request)
+
+| Topic | Default | Where |
+|---|---|---|
+| Order number | `RB-DD-MM-YY-A0001`, 100 per letter block, after Z comes AA, AB… (no upper limit) | `OrderNumberGenerator` |
+| Prefix | `RB`, editable in Admin → Settings (affects new orders only) | settings table |
+| Business day | Starts at 00:00 Asia/Dhaka | `POS_DAY_START_HOUR` |
+| Money | DECIMAL(12,2), BigDecimal math, HALF_UP rounding to 2 places | `App\Support\Money` |
+| Line price | (variant price + sum of add-ons) × quantity | `OrderService` |
+| Receipt currency | "Tk" on paper (thermal fonts often lack ৳), ৳ on screen | receipt view |
+| Sugar / Ice defaults | 100% sugar, Regular ice | `config/pos.php` |
+| Removed variations | Deactivated and renamed "(old #id)", never deleted | `ProductController` |
+| Duplicate submit | Same cart UUID returns the same order | `OrderService` |
+
+## Open questions for the owner
+
+1. **Order number capacity** – Is AA0001… after Z0100 (2,600+ orders/day) fine, or should it wrap/fail?
+2. **Business-day cutoff** – Does the shop stay open past midnight? If so, which hour should start the new day (e.g. 4 AM)?
+3. **Costing method** – Latest purchase price, weighted average, or FIFO for ingredient cost? (Phase 4)
+4. **VAT** – Is VAT charged? Inclusive or exclusive, and what rate? (Phase 3)
+5. **Offline conflicts** – If an offline order uses an item that was deactivated or re-priced meanwhile, accept at the offline price or reject? (Phase 7)
+6. **Refund stock** – On refund, do ingredients go back to stock or count as wastage? (Phase 4)
+7. **Prefix** – Confirm `RB` is final.
