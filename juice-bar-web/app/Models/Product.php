@@ -71,6 +71,19 @@ class Product extends Model
         return config('pos.item_language') === 'bn' && filled($this->name_bn) ? $this->name_bn : $this->name;
     }
 
+    /** Emoji shown on the POS tile when there is no photo. */
+    public function icon(): string
+    {
+        $haystack = strtolower($this->name.' '.($this->category?->slug ?? ''));
+        foreach (config('pos.item_icons', []) as $word => $icon) {
+            if (preg_match('/\\b'.preg_quote($word, '/').'\\b/', $haystack)) {
+                return $icon;
+            }
+        }
+
+        return config('pos.default_item_icon', '🧃');
+    }
+
     public function imageUrl(): ?string
     {
         return $this->image_path ? Storage::disk('public')->url($this->image_path) : null;

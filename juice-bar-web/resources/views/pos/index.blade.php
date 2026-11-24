@@ -227,7 +227,7 @@
         csrf: document.querySelector('meta[name=csrf-token]').content,
     };
 </script>
-<script src="{{ asset('js/pos.js') }}?v=7"></script>
+<script src="{{ asset('js/pos.js') }}?v=8"></script>
 <script>
     // Offline support: cache the POS screen and its files (see public/sw.js).
     if ('serviceWorker' in navigator) {
