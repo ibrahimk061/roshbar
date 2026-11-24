@@ -15,6 +15,9 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
+    // One-time web install page /_setup (only while set and not locked).
+    'setup_token' => env('SETUP_TOKEN'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment
