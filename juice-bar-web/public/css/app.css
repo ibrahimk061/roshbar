@@ -103,3 +103,16 @@ body { background: var(--jb-bg); color: var(--jb-text); }
 .quick-cash .btn { min-height: 44px; }
 .change-due { font-size: 1.4rem; font-weight: 800; color: var(--jb-primary-dark); }
 [hidden] { display: none !important; }
+
+/* Report stat tiles */
+.stat-label { font-size: .85rem; color: var(--jb-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
+.stat-value { font-size: 1.6rem; font-weight: 800; line-height: 1.2; margin: .15rem 0; }
+.stat-strong { border-color: var(--jb-primary); background: #F2FAF5; }
+.badge-soft-muted.fs-6 { font-size: .9rem !important; }
+
+/* Top nav: one line per link; hide icons on mid-size screens so all links fit. */
+.navbar .nav-link { white-space: nowrap; }
+@media (min-width: 992px) and (max-width: 1399.98px) {
+    .navbar .nav-link > .bi { display: none; }
+    .navbar .navbar-nav .nav-link { padding-left: .5rem; padding-right: .5rem; }
+}

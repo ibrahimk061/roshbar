@@ -26,6 +26,9 @@
 | Refunds / returns | None: the shop gives no refunds (owner, 2026-11-24). Paid orders can't be cancelled | `OrderStatusService` |
 | Hold | Server-side held carts, shared by all tills, no order number until checkout; prices re-checked at checkout | `HeldCartService` |
 | Deploy | Build all phases first, deploy later when the owner asks (owner, 2026-11-24) | — |
+| Inventory | Not used: no ingredients, recipes or stock (owner, 2026-11-24). Shop purchases are entered as expenses | — |
+| Expenses | Cashier: today only, add only. Owner/manager: any past date, edit, delete | `ExpenseService` |
+| Sales report | By business date; cancelled orders excluded; "Sales − expenses" is sales after discount incl. VAT minus expenses (not a full profit figure) | `SalesReportService` |
 | Website | View only: no ordering and no contact form (owner, 2026-11-24) | — |
 | Live data | Old site's `.env` and database are never changed; import only reads | — |
 
@@ -33,9 +36,7 @@
 
 1. **Order number capacity** – Is AA0001… after Z0100 (2,600+ orders/day) fine, or should it wrap/fail?
 2. **Business-day cutoff** – Does the shop stay open past midnight? If so, which hour should start the new day (e.g. 4 AM)?
-3. **Costing method** – Latest purchase price, weighted average, or FIFO for ingredient cost? (Phase 4)
 4. **VAT** – Is VAT charged? Inclusive or exclusive, and what rate? (Setting exists, default 0%)
 5. **Offline conflicts** – If an offline order uses an item that was deactivated or re-priced meanwhile, accept at the offline price or reject? (Phase 7)
-6. **Cancelled order stock** – If a made drink's order is cancelled, count the ingredients as wastage? (Phase 4)
 7. **Prefix** – `RB` = Roshbar, assumed final.
 8. **Deploy** – Same cPanel account as the old site? Then the domain's document root moves to `juice-bar-web/public` on switch-over day.
