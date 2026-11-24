@@ -18,20 +18,6 @@ return [
     // 0 = midnight. Open question: late-night shops may want e.g. 4.
     'business_day_starts_at_hour' => (int) env('POS_DAY_START_HOUR', 0),
 
-    // POS tile icon when an item has no photo: first keyword found in the
-    // item's English name, then its category slug, wins.
-    'item_icons' => [
-        'lassi' => '🥛',
-        'mango' => '🥭', 'watermelon' => '🍉', 'daab' => '🥥', 'coconut' => '🥥',
-        'lychee' => '🌹', 'rose' => '🌹', 'bel' => '🍈', 'banana' => '🍌',
-        'beet' => '🥕', 'carrot' => '🥕', 'green' => '🥬', 'detox' => '🥬',
-        'jambura' => '🍊', 'malta' => '🍊', 'orange' => '🍊', 'amra' => '🫒',
-        'lemon' => '🍋', 'pineapple' => '🍍', 'strawberry' => '🍓', 'grape' => '🍇',
-        'apple' => '🍎', 'guava' => '🍐', 'papaya' => '🍈', 'pomegranate' => '🍎',
-        'shake' => '🥤', 'smoothie' => '🥤', 'smoothies' => '🥤',
-    ],
-    'default_item_icon' => '🧃',
-
     // Ask sugar / ice for each drink? Off: the POS and the app skip both.
     'ask_sugar_ice' => (bool) env('POS_ASK_SUGAR_ICE', false),
     'sugar_levels' => ['0', '25', '50', '75', '100'],
