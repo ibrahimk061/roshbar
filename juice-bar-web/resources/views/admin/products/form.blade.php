@@ -5,6 +5,7 @@
         ? $product->variants->where('is_active', true)->values()->map(fn ($v) => ['id' => $v->id, 'name' => $v->name, 'price' => $v->price, 'is_active' => true])->all()
         : [['id' => null, 'name' => 'Regular', 'price' => '', 'is_active' => true]]);
     $defaultIndex = (int) old('default_variant', $product->exists ? max(0, (int) $product->variants->where('is_active', true)->values()->search(fn ($v) => $v->is_default)) : 0);
+    $months = collect(old('season_months', $product->seasonMonths()))->map(fn ($m) => (int) $m);
     $selectedAddons = collect(old('addon_ids', $product->exists ? $product->addons->pluck('id')->all() : []))->map(fn ($id) => (int) $id);
 @endphp
 @section('content')
@@ -30,7 +31,36 @@
                         </select>
                     </div>
                     <div class="col-md-4"><label class="form-label">Display order</label><input name="sort_order" type="number" min="0" class="form-control" value="{{ old('sort_order', $product->sort_order ?? 0) }}"></div>
-                    <div class="col-12"><label class="form-label">Description</label><textarea name="description" class="form-control" rows="2" maxlength="1000">{{ old('description', $product->description) }}</textarea></div>
+                    <div class="col-12"><label class="form-label">Description (English)</label><textarea name="description" class="form-control" rows="2" maxlength="1000">{{ old('description', $product->description) }}</textarea></div>
+                </div>
+            </div>
+
+            <div class="jb-card p-4 mb-3">
+                <h2 class="h6 fw-bold mb-1">Website (roshbar.com)</h2>
+                <p class="text-muted small">How this drink appears on the public menu. Bangla fields fall back to English when empty.</p>
+                <div class="row g-3">
+                    <div class="col-md-6"><label class="form-label">বাংলা নাম</label><input name="name_bn" class="form-control" value="{{ old('name_bn', $product->name_bn) }}" maxlength="120"></div>
+                    <div class="col-md-6"><label class="form-label">Web address</label><div class="input-group"><span class="input-group-text">/menu/</span><input name="slug" class="form-control" value="{{ old('slug', $product->slug) }}" maxlength="120" placeholder="auto from name"></div></div>
+                    <div class="col-12"><label class="form-label">বাংলা বিবরণ (description)</label><textarea name="description_bn" class="form-control" rows="2" maxlength="1000">{{ old('description_bn', $product->description_bn) }}</textarea></div>
+                    <div class="col-md-6"><label class="form-label">Ingredients</label><input name="ingredients" class="form-control" value="{{ old('ingredients', $product->ingredients) }}" maxlength="255" placeholder="Mango, chilled water"></div>
+                    <div class="col-md-6"><label class="form-label">উপকরণ</label><input name="ingredients_bn" class="form-control" value="{{ old('ingredients_bn', $product->ingredients_bn) }}" maxlength="255"></div>
+                    <div class="col-md-3"><label class="form-label">Drink colour</label><input type="color" name="color" class="form-control form-control-color w-100" value="{{ old('color', $product->color ?? '#FFB000') }}"></div>
+                    <div class="col-md-5">
+                        <label class="form-label">Glass garnish</label>
+                        <select name="garnish" class="form-select">
+                            @foreach (\App\Models\Product::GARNISHES as $g)<option value="{{ $g }}" @selected(old('garnish', $product->garnish ?? 'orange') === $g)>{{ ucfirst($g) }}</option>@endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-4"><label class="form-label">Calories</label><input name="calories" type="number" min="0" class="form-control" value="{{ old('calories', $product->calories ?? 0) }}"></div>
+                    <div class="col-12">
+                        <div class="form-check form-switch mb-2"><input type="hidden" name="is_seasonal" value="0"><input class="form-check-input" type="checkbox" name="is_seasonal" value="1" id="is_seasonal" @checked(old('is_seasonal', $product->is_seasonal))><label class="form-check-label" for="is_seasonal">Seasonal drink, shown on the home page in these months:</label></div>
+                        <div class="d-flex flex-wrap gap-1">
+                            @foreach (['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'] as $i => $mn)
+                                <input type="checkbox" class="btn-check" name="season_months[]" value="{{ $i + 1 }}" id="sm{{ $i }}" @checked($months->contains($i + 1))>
+                                <label class="btn btn-sm btn-outline-primary" for="sm{{ $i }}">{{ $mn }}</label>
+                            @endforeach
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -60,6 +90,12 @@
                 <h2 class="h6 fw-bold">Status</h2>
                 <div class="form-check form-switch mb-2"><input type="hidden" name="is_active" value="0"><input class="form-check-input" type="checkbox" name="is_active" value="1" id="is_active" @checked(old('is_active', $product->is_active))><label class="form-check-label" for="is_active">Show on menu</label></div>
                 <div class="form-check form-switch"><input type="hidden" name="is_available" value="0"><input class="form-check-input" type="checkbox" name="is_available" value="1" id="is_available" @checked(old('is_available', $product->is_available))><label class="form-check-label" for="is_available">Available now (off = sold out)</label></div>
+                <hr>
+                <div class="form-check form-switch mb-2"><input type="hidden" name="show_on_website" value="0"><input class="form-check-input" type="checkbox" name="show_on_website" value="1" id="show_on_website" @checked(old('show_on_website', $product->show_on_website ?? true))><label class="form-check-label" for="show_on_website">Show on website</label></div>
+                <div class="form-check form-switch"><input type="hidden" name="is_featured" value="0"><input class="form-check-input" type="checkbox" name="is_featured" value="1" id="is_featured" @checked(old('is_featured', $product->is_featured))><label class="form-check-label" for="is_featured">Featured on home page</label></div>
+                @if ($product->exists && $product->slug)
+                    <a class="small d-inline-block mt-2" href="{{ route('site.product', $product->slug) }}" target="_blank"><i class="bi bi-box-arrow-up-right"></i> View on website</a>
+                @endif
             </div>
             <div class="jb-card p-4 mb-3">
                 <h2 class="h6 fw-bold">Allowed add-ons</h2>

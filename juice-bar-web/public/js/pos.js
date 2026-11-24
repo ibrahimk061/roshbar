@@ -55,7 +55,7 @@
     }
     grid.innerHTML = items.map((p) => `
       <button type="button" class="pos-tile ${p.available ? '' : 'soldout'}" data-id="${p.id}" ${p.available ? '' : 'disabled'}>
-        <div class="pos-tile-img">${p.image ? `<img src="${esc(p.image)}" alt="">` : esc(p.name.charAt(0))}</div>
+        <div class="pos-tile-img" ${/^#[0-9A-Fa-f]{6}$/.test(p.color || '') ? `style="background:${p.color}"` : ''}>${p.image ? `<img src="${esc(p.image)}" alt="">` : esc(p.name.charAt(0))}</div>
         <div class="pos-tile-body">
           <div class="pos-tile-name">${esc(p.name)}</div>
           <div class="pos-tile-price money">${p.variants.length > 1 ? 'from ' : ''}৳ ${fmt(minPrice(p))}</div>

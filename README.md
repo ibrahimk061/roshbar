@@ -1,10 +1,10 @@
-# Juice Bar POS
+# Roshbar — website + POS
 
-Point-of-sale and business management for a single-branch juice bar (BDT, Asia/Dhaka).
+The roshbar.com public website and the shop's point-of-sale / business management in one Laravel app (BDT, Asia/Dhaka).
 
 ```
 juice-bar/
-├── juice-bar-web/        Laravel web POS + admin (this is the running app)
+├── juice-bar-web/        Laravel app: roshbar.com website + staff POS/admin
 └── docs/
     ├── JUICE_BAR_POS_BLUEPRINT.md   full product blueprint
     ├── DEVELOPMENT_ROADMAP.md       phases, what's done, what's next

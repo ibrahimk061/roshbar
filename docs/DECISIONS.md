@@ -13,6 +13,10 @@
 | Sugar / Ice defaults | 100% sugar, Regular ice | `config/pos.php` |
 | Removed variations | Deactivated and renamed "(old #id)", never deleted | `ProductController` |
 | Duplicate submit | Same cart UUID returns the same order | `OrderService` |
+| Website + POS | One Laravel app, one product table (owner chose this on 2026-11-24) | — |
+| Imported old admins | Become Owner, keep their password | `roshbar:import-legacy` |
+| Roles | Owner: all · Manager: POS + admin, not staff · Cashier: POS + orders | `routes/web.php` |
+| Live data | Old site's `.env` and database are never changed; import only reads | — |
 
 ## Open questions for the owner
 
@@ -22,4 +26,5 @@
 4. **VAT** – Is VAT charged? Inclusive or exclusive, and what rate? (Phase 3)
 5. **Offline conflicts** – If an offline order uses an item that was deactivated or re-priced meanwhile, accept at the offline price or reject? (Phase 7)
 6. **Refund stock** – On refund, do ingredients go back to stock or count as wastage? (Phase 4)
-7. **Prefix** – Confirm `RB` is final.
+7. **Prefix** – `RB` = Roshbar, assumed final.
+8. **Deploy** – Same cPanel account as the old site? Then the domain's document root moves to `juice-bar-web/public` on switch-over day.

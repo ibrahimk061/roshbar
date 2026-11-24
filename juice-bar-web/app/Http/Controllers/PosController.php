@@ -31,6 +31,7 @@ class PosController extends Controller
                 'name' => $p->name,
                 'sku' => $p->sku,
                 'image' => $p->imageUrl(),
+                'color' => $p->color,
                 'available' => $p->is_available,
                 'variants' => $p->variants->map(fn ($v) => [
                     'id' => $v->id, 'name' => $v->name, 'price' => $v->price, 'default' => $v->is_default,

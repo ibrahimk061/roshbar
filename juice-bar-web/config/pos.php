@@ -2,7 +2,7 @@
 
 return [
     // Defaults; the settings table overrides business_name / address / phone / order_prefix.
-    'business_name' => env('POS_BUSINESS_NAME', 'Juice Bar'),
+    'business_name' => env('POS_BUSINESS_NAME', 'Roshbar'),
     'order_prefix' => env('POS_ORDER_PREFIX', 'RB'),
     'currency' => 'BDT',
     'currency_symbol' => '৳',

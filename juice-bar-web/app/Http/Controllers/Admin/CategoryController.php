@@ -48,6 +48,7 @@ class CategoryController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:80', Rule::unique('categories', 'name')->ignore($category?->id)],
+            'name_bn' => ['nullable', 'string', 'max:80'],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:65000'],
         ]);
         $data['sort_order'] = (int) ($data['sort_order'] ?? 0);

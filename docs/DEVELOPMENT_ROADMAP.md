@@ -13,11 +13,20 @@ end-to-end slice so the counter flow can be seen early.
 - Receipt: 58 mm thermal layout, browser print, preview opens right after checkout; reprint from `/orders`.
 - 29 automated tests (order numbers, midnight boundary, pricing, tampering, idempotency, snapshots, admin CRUD, receipt).
 
+## ✅ Slice 2 — roshbar.com website + staff login (done)
+
+- Old core-PHP roshbar.com site ported into the same Laravel app: Home (featured, seasonal by month, categories, visit), Menu with category filter, Drink detail, Our story, Contact (honeypot + 1 msg/min), English/বাংলা toggle with Bangla digits, SEO tags, same design.
+- One product table for website and POS: products got Bangla name/description, ingredients, colour, garnish, calories, seasonal months, featured, "show on website". Sizes on the website = POS variations.
+- Staff login at `/login` (5 failures → 15 min block), roles Owner / Manager / Cashier, every POS/admin route protected. Owner manages staff.
+- Admin: website messages (unread, filters, call/WhatsApp), shop details (both languages, map, WhatsApp) shared by website and receipt.
+- `php artisan roshbar:import-legacy` (read-only, repeatable, `--dry-run`).
+- 47 automated tests.
+
 ## Next phases
 
 | # | Phase | Main items |
 |---|---|---|
-| 2 | Login, roles, staff | Auth, Owner / Manager / Cashier roles + permissions, protect admin, user on orders, audit log |
+| 2 | Staff extras | Audit log, own-password change screen, staff name on receipt (login + roles already done in slice 2) |
 | 3 | Payments & order flow | Cash / bKash / Nagad / Card, split & partial, change due on receipt, discount, VAT (after decision), order status flow (New → Preparing → Ready → Completed), cancel with reason, hold/resume |
 | 4 | Ingredients, recipes, inventory | Units & conversions, recipe per variation, add-on consumption, stock deduction on sale, purchases, suppliers, wastage, costing |
 | 5 | Expenses & cash sessions | Opening/closing cash, cash movements, expenses, reconciliation |
@@ -26,10 +35,11 @@ end-to-end slice so the counter flow can be seen early.
 | 8 | API v1 + SUNMI V2s Android app | Sanctum tokens, Java app, built-in printer |
 | 9 | Security, deployment, backups | Hardening, production setup |
 
-## Known limitations of slice 1
+## Known limitations
 
-- No login: anyone who can open the URL can use the admin. Local / trusted machine only.
 - No payment capture yet; orders are saved with status `new` and the receipt shows totals only.
 - Discount and VAT fields exist (always 0) and are not editable yet.
 - On phones the cart sits below the menu; the POS layout targets a tablet or counter screen first.
 - Browser printing depends on the printer driver's paper size being set to 58 mm.
+- Website prices are shown rounded to whole taka (as on the old site); the POS and receipt use exact paisa.
+- Imported contact-message times assume the old server stored Asia/Dhaka time.

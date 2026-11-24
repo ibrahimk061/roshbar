@@ -36,7 +36,7 @@ class ProductController extends Controller
 
     public function create(): View
     {
-        return $this->form(new Product(['is_active' => true, 'is_available' => true]));
+        return $this->form(new Product(['is_active' => true, 'is_available' => true, 'show_on_website' => true, 'color' => '#FFB000', 'garnish' => 'orange']));
     }
 
     public function edit(Product $product): View
@@ -87,6 +87,20 @@ class ProductController extends Controller
             'is_active' => $data['is_active'],
             'is_available' => $data['is_available'],
             'sort_order' => (int) ($data['sort_order'] ?? 0),
+            'slug' => $data['slug'],
+            'name_bn' => $data['name_bn'] ?? null,
+            'description_bn' => $data['description_bn'] ?? null,
+            'ingredients' => $data['ingredients'] ?? null,
+            'ingredients_bn' => $data['ingredients_bn'] ?? null,
+            'color' => $data['color'],
+            'garnish' => $data['garnish'],
+            'calories' => (int) ($data['calories'] ?? 0),
+            'is_seasonal' => $data['is_seasonal'],
+            'season_months' => $data['is_seasonal'] && ! empty($data['season_months'])
+                ? collect($data['season_months'])->map(fn ($m) => (int) $m)->unique()->sort()->implode(',')
+                : null,
+            'is_featured' => $data['is_featured'],
+            'show_on_website' => $data['show_on_website'],
         ]);
 
         if ($request->boolean('remove_image') && $product->image_path) {

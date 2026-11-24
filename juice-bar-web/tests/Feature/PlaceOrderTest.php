@@ -6,7 +6,8 @@ use App\Models\Addon;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductVariant;
-use Database\Seeders\MenuSeeder;
+use App\Models\User;
+use Database\Seeders\RoshbarMenuSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -18,23 +19,24 @@ class PlaceOrderTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(MenuSeeder::class);
+        $this->seed(RoshbarMenuSeeder::class);
+        $this->actingAs(User::factory()->create(['role' => 'cashier']));
         $this->travelTo(\Carbon\Carbon::parse('2026-11-24 06:00:00', 'UTC')); // 12:00 Dhaka
     }
 
-    private function mango(string $size = 'Large'): ProductVariant
+    private function mango(string $size = '500ml'): ProductVariant
     {
-        return Product::query()->where('sku', 'JU-MNG')->firstOrFail()->variants()->where('name', $size)->firstOrFail();
+        return Product::query()->where('slug', 'himsagar-mango')->firstOrFail()->variants()->where('name', $size)->firstOrFail();
     }
 
     public function test_pos_screen_renders_menu(): void
     {
-        $this->get('/pos')->assertOk()->assertSee('Mango Juice')->assertSee('Fresh Juice');
+        $this->get('/pos')->assertOk()->assertSee('Himsagar Mango')->assertSee('Fresh juice');
     }
 
     public function test_places_order_with_server_side_prices(): void
     {
-        $large = $this->mango('Large');   // 180.00
+        $large = $this->mango('500ml');   // 320.00
         $honey = Addon::query()->where('name', 'Honey')->first();         // 30.00
         $chia = Addon::query()->where('name', 'Chia Seeds')->first();     // 25.00
 
@@ -44,7 +46,7 @@ class PlaceOrderTest extends TestCase
             'items' => [
                 ['variant_id' => $large->id, 'quantity' => 2, 'sugar' => '50', 'ice' => 'less_ice', 'addon_ids' => [$honey->id, $chia->id], 'note' => 'no seeds on top',
                  'price' => '1.00', 'unit_price' => '1.00'], // tampered fields must be ignored
-                ['variant_id' => $this->mango('Regular')->id, 'quantity' => 1],
+                ['variant_id' => $this->mango('250ml')->id, 'quantity' => 1],
             ],
             'grand_total' => '5.00',
         ]);
@@ -52,16 +54,17 @@ class PlaceOrderTest extends TestCase
         $res->assertCreated()->assertJsonPath('order_number', 'RB-24-11-26-A0001');
         $order = Order::query()->with('items.addons')->first();
 
-        // (180 + 30 + 25) * 2 = 470, + 120 = 590
-        $this->assertSame('590.00', $order->grand_total);
-        $this->assertSame('590.00', $order->subtotal);
+        // (320 + 30 + 25) * 2 = 750, + 180 = 930
+        $this->assertSame('930.00', $order->grand_total);
+        $this->assertSame('930.00', $order->subtotal);
         $this->assertSame('2026-11-24', $order->business_date->format('Y-m-d'));
         $line = $order->items->first();
-        $this->assertSame('Mango Juice', $line->product_name);
-        $this->assertSame('Large', $line->variant_name);
-        $this->assertSame('180.00', $line->unit_price);
+        $this->assertSame('Himsagar Mango', $line->product_name);
+        $this->assertSame('500ml', $line->variant_name);
+        $this->assertSame('320.00', $line->unit_price);
         $this->assertSame('55.00', $line->addons_unit_total);
-        $this->assertSame('470.00', $line->line_total);
+        $this->assertSame('750.00', $line->line_total);
+        $this->assertNotNull($order->user_id);
         $this->assertSame(['Honey', 'Chia Seeds'], $line->addons->pluck('addon_name')->all());
         $this->assertSame('50', $line->sugar);
         $this->assertSame('less_ice', $line->ice);
@@ -69,15 +72,15 @@ class PlaceOrderTest extends TestCase
 
     public function test_snapshot_survives_menu_price_change(): void
     {
-        $v = $this->mango('Regular');
+        $v = $this->mango('250ml');
         $this->postJson('/orders', ['uuid' => (string) Str::uuid(), 'order_type' => 'dine_in', 'items' => [['variant_id' => $v->id, 'quantity' => 1]]])->assertCreated();
 
         $v->update(['price' => '999.00']);
         $v->product->update(['name' => 'Renamed']);
 
         $item = Order::query()->first()->items()->first();
-        $this->assertSame('120.00', $item->unit_price);
-        $this->assertSame('Mango Juice', $item->product_name);
+        $this->assertSame('180.00', $item->unit_price);
+        $this->assertSame('Himsagar Mango', $item->product_name);
     }
 
     public function test_same_uuid_is_idempotent(): void
@@ -114,7 +117,7 @@ class PlaceOrderTest extends TestCase
 
     public function test_rejects_addon_not_allowed_for_product(): void
     {
-        $iceCream = Addon::query()->where('name', 'Ice Cream')->first(); // not allowed on Mango Juice
+        $iceCream = Addon::query()->where('name', 'Ice Cream')->first(); // not allowed on Himsagar Mango
 
         $this->postJson('/orders', ['uuid' => (string) Str::uuid(), 'order_type' => 'takeaway', 'items' => [['variant_id' => $this->mango()->id, 'quantity' => 1, 'addon_ids' => [$iceCream->id]]]])
             ->assertUnprocessable()->assertJsonValidationErrors('items.0.addon_ids');
@@ -137,9 +140,9 @@ class PlaceOrderTest extends TestCase
         $this->get($res->json('receipt_url'))
             ->assertOk()
             ->assertSee('RB-24-11-26-A0001')
-            ->assertSee('Mango Juice (Large)')
-            ->assertSee('2 x 180.00')
-            ->assertSee('Tk 360.00')
+            ->assertSee('Himsagar Mango (500ml)')
+            ->assertSee('2 x 320.00')
+            ->assertSee('Tk 640.00')
             ->assertSee('Sugar 25%')
             ->assertSee('No Ice')
             ->assertSee('24-11-2026')

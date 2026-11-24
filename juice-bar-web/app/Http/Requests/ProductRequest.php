@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
@@ -31,6 +32,12 @@ class ProductRequest extends FormRequest
             'default_variant' => $defaultPos === false ? 0 : $defaultPos,
             'is_active' => $this->boolean('is_active'),
             'is_available' => $this->boolean('is_available'),
+            'is_seasonal' => $this->boolean('is_seasonal'),
+            'is_featured' => $this->boolean('is_featured'),
+            'show_on_website' => $this->boolean('show_on_website'),
+            'slug' => Str::slug((string) ($this->input('slug') ?: $this->input('name'))),
+            'color' => strtoupper((string) ($this->input('color') ?: '#FFB000')),
+            'garnish' => $this->input('garnish') ?: 'orange',
             'sku' => strtoupper(trim((string) $this->input('sku'))),
         ]);
     }
@@ -55,6 +62,20 @@ class ProductRequest extends FormRequest
             'variants.*.price' => ['required', 'decimal:0,2', 'min:0', 'max:9999999999'],
             'variants.*.is_active' => ['nullable', 'boolean'],
             'default_variant' => ['nullable', 'integer', 'min:0'],
+            // website
+            'slug' => ['required', 'string', 'max:120', Rule::unique('products', 'slug')->ignore($productId)],
+            'name_bn' => ['nullable', 'string', 'max:120'],
+            'description_bn' => ['nullable', 'string', 'max:1000'],
+            'ingredients' => ['nullable', 'string', 'max:255'],
+            'ingredients_bn' => ['nullable', 'string', 'max:255'],
+            'color' => ['required', 'regex:/^#[0-9A-F]{6}$/'],
+            'garnish' => ['required', Rule::in(\App\Models\Product::GARNISHES)],
+            'calories' => ['nullable', 'integer', 'min:0', 'max:5000'],
+            'is_seasonal' => ['boolean'],
+            'season_months' => ['nullable', 'array'],
+            'season_months.*' => ['integer', 'between:1,12'],
+            'is_featured' => ['boolean'],
+            'show_on_website' => ['boolean'],
             'addon_ids' => ['nullable', 'array'],
             'addon_ids.*' => ['integer', 'exists:addons,id'],
         ];
@@ -69,6 +90,8 @@ class ProductRequest extends FormRequest
             'variants.*.name.distinct' => 'Two variations have the same name.',
             'variants.*.price.required' => 'Each variation needs a price.',
             'variants.*.price.decimal' => 'Price can have at most 2 decimal places.',
+            'slug.unique' => 'Another product already uses this web address (slug).',
+            'color.regex' => 'Colour must look like #FFB000.',
         ];
     }
 

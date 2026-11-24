@@ -112,5 +112,5 @@
         csrf: document.querySelector('meta[name=csrf-token]').content,
     };
 </script>
-<script src="{{ asset('js/pos.js') }}?v=1"></script>
+<script src="{{ asset('js/pos.js') }}?v=2"></script>
 @endpush

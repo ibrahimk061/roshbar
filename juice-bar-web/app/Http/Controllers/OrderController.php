@@ -43,8 +43,8 @@ class OrderController extends Controller
             'order' => $order,
             'shop' => [
                 'name' => Setting::get('business_name', config('pos.business_name')),
-                'address' => Setting::get('business_address'),
-                'phone' => Setting::get('business_phone'),
+                'address' => Setting::get('shop_address'),
+                'phone' => Setting::get('shop_phone'),
                 'footer' => Setting::get('receipt_footer', 'Thank you! Come again.'),
             ],
         ]);

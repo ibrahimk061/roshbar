@@ -5,7 +5,8 @@ namespace Tests\Feature;
 use App\Models\Addon;
 use App\Models\Category;
 use App\Models\Product;
-use Database\Seeders\MenuSeeder;
+use App\Models\User;
+use Database\Seeders\RoshbarMenuSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -16,17 +17,19 @@ class ProductAdminTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(MenuSeeder::class);
+        $this->seed(RoshbarMenuSeeder::class);
+        $this->actingAs(User::factory()->create(['role' => 'manager']));
     }
 
     public function test_admin_pages_render(): void
     {
-        $this->get('/admin/products')->assertOk()->assertSee('Mango Juice');
+        $this->get('/admin/products')->assertOk()->assertSee('Himsagar Mango');
         $this->get('/admin/products/create')->assertOk();
         $this->get('/admin/products/'.Product::query()->first()->id.'/edit')->assertOk();
-        $this->get('/admin/categories')->assertOk()->assertSee('Smoothies');
+        $this->get('/admin/categories')->assertOk()->assertSee('Smoothies & lassi');
         $this->get('/admin/addons')->assertOk()->assertSee('Honey');
         $this->get('/admin/settings')->assertOk();
+        $this->get('/admin/messages')->assertOk();
     }
 
     public function test_create_product_with_variants_and_addons(): void
@@ -59,7 +62,7 @@ class ProductAdminTest extends TestCase
     {
         $this->post('/admin/products', [
             'category_id' => Category::query()->first()->id,
-            'name' => 'X', 'sku' => 'JU-MNG', 'variants' => [['name' => '', 'price' => '']],
+            'name' => 'X', 'sku' => 'HIMSAGAR-MANGO', 'variants' => [['name' => '', 'price' => '']],
         ])->assertSessionHasErrors(['sku', 'variants']);
 
         $this->post('/admin/products', [
@@ -70,21 +73,21 @@ class ProductAdminTest extends TestCase
 
     public function test_removing_a_variant_deactivates_it_and_name_can_be_reused(): void
     {
-        $p = Product::query()->where('sku', 'JU-MNG')->first();
+        $p = Product::query()->where('slug', 'himsagar-mango')->first();
         [$reg, $med, $lg] = $p->variants->all();
 
         $this->put("/admin/products/{$p->id}", [
             'category_id' => $p->category_id, 'name' => $p->name, 'sku' => $p->sku,
             'is_active' => '1', 'is_available' => '1',
             'variants' => [
-                ['id' => $reg->id, 'name' => 'Regular', 'price' => '125', 'is_active' => '1'],
-                ['id' => '', 'name' => 'Large', 'price' => '200', 'is_active' => '1'],   // re-added as new row
+                ['id' => $reg->id, 'name' => '250ml', 'price' => '185', 'is_active' => '1'],
+                ['id' => '', 'name' => '500ml', 'price' => '330', 'is_active' => '1'],   // re-added as new row
             ],
             'default_variant' => '0',
         ])->assertRedirect('/admin/products')->assertSessionHasNoErrors();
 
         $active = $p->variants()->where('is_active', true)->pluck('price', 'name')->all();
-        $this->assertSame(['Regular' => '125.00', 'Large' => '200.00'], $active);
+        $this->assertSame(['250ml' => '185.00', '500ml' => '330.00'], $active);
         $this->assertFalse($med->fresh()->is_active);
         $this->assertFalse($lg->fresh()->is_active);
         $this->assertTrue($lg->fresh()->exists);
@@ -92,7 +95,7 @@ class ProductAdminTest extends TestCase
 
     public function test_toggle_sold_out_hides_from_pos_ordering(): void
     {
-        $p = Product::query()->where('sku', 'JU-MNG')->first();
+        $p = Product::query()->where('slug', 'himsagar-mango')->first();
         $this->patch("/admin/products/{$p->id}/availability")->assertRedirect();
         $this->assertFalse($p->fresh()->is_available);
     }
