@@ -64,8 +64,10 @@
             </div>
             <div class="modal-body">
                 <div class="mb-3"><div class="fw-semibold mb-2">Size</div><div class="opt-group" id="im-variants"></div></div>
+                @if (config('pos.ask_sugar_ice'))
                 <div class="mb-3"><div class="fw-semibold mb-2">Sugar</div><div class="opt-group" id="im-sugar"></div></div>
                 <div class="mb-3"><div class="fw-semibold mb-2">Ice</div><div class="opt-group" id="im-ice"></div></div>
+                @endif
                 <div class="mb-3" id="im-addons-wrap"><div class="fw-semibold mb-2">Add-ons</div><div class="opt-group" id="im-addons"></div></div>
                 <div class="mb-3">
                     <label class="fw-semibold mb-2" for="im-note">Note</label>
@@ -206,6 +208,7 @@
 <script>
     window.POS = {
         products: @json($products),
+        askSugarIce: @json((bool) config('pos.ask_sugar_ice')),
         sugarLevels: @json(config('pos.sugar_levels')),
         defaultSugar: @json(config('pos.default_sugar')),
         iceLevels: @json(config('pos.ice_levels')),
@@ -224,7 +227,7 @@
         csrf: document.querySelector('meta[name=csrf-token]').content,
     };
 </script>
-<script src="{{ asset('js/pos.js') }}?v=6"></script>
+<script src="{{ asset('js/pos.js') }}?v=7"></script>
 <script>
     // Offline support: cache the POS screen and its files (see public/sw.js).
     if ('serviceWorker' in navigator) {
