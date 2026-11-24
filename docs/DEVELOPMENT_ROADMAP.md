@@ -83,12 +83,21 @@ The owner dropped ingredients, recipes and stock ("only items, price, qty") and 
 - The pill at the top of the cart shows Offline / To send / Sending with a count.
 - 80 automated tests.
 
+## 🟡 Phase 9 prep — Deployment ready (built, not deployed)
+
+- Step-by-step cPanel guide: [DEPLOY.md](DEPLOY.md). Nothing has been run on the live server.
+- `php artisan roshbar:check` lists what must be right before going live (debug off, https, key, database, writable folders).
+- `php artisan roshbar:backup` saves a gzipped database copy to `storage/app/backups/` and keeps 30 days. It runs every night at 23:45 Dhaka time once the cPanel cron for `schedule:run` is added.
+- Every page sends security headers (nosniff, SAMEORIGIN, Referrer-Policy, Permissions-Policy, and HSTS over https).
+- `.env.production.example` holds placeholders only.
+- 84 automated tests.
+
 ## Next phases
 
 | # | Phase | Main items |
 |---|---|---|
 | 8 | API v1 + SUNMI V2s Android app | Sanctum tokens, Java app, built-in printer |
-| 9 | Security, deployment, backups | Hardening, production setup |
+| 9 | Go live | Follow DEPLOY.md when the owner says so |
 
 ## Known limitations
 
