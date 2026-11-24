@@ -30,7 +30,7 @@ Every route except `/login` needs `Authorization: Bearer <token>`.
 {"divider": true}
 ```
 
-- `size` 1 is normal text, `size` 2 is big text (the total).
+- `size` 1 is normal text, `size` 2 is big text (the total), `size` 3 is extra big (the order's last part, e.g. `A0001`, on its own line under `RB-24-11-26`).
 - Two-sided lines (label + amount) also have `left` and `right`. The app draws `left` at the left edge and `right` at the right edge.
 - `text` is the same line padded for a 32-column (`size` 1) or 21-column (`size` 2) plain-text printer.
 - The app draws the whole receipt as one image (384 dots wide), so Bangla and ৳ print correctly.

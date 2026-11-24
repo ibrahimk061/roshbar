@@ -25,4 +25,12 @@ final class ReceiptText
 
         return (string) (config("pos.receipt_labels.$lang.ice_levels.$ice") ?? config("pos.ice_levels.$ice") ?? $ice);
     }
+
+    /** "RB-24-11-26-A0001" -> ["RB-24-11-26", "A0001"] (the big part is printed on its own line). */
+    public static function splitNumber(string $number): array
+    {
+        $at = strrpos($number, '-');
+
+        return $at === false ? ['', $number] : [substr($number, 0, $at), substr($number, $at + 1)];
+    }
 }

@@ -26,7 +26,8 @@
     .item { margin: 3px 0; }
     .item .meta { padding-left: 6px; font-size: 10px; }
     .total { font-size: 14px; font-weight: 700; }
-    .order-no { font-size: 13px; font-weight: 700; margin: 2px 0; }
+    .order-no { font-size: 12px; font-weight: 700; margin: 2px 0 0; }
+    .order-seq { font-size: 30px; font-weight: 700; line-height: 1.1; letter-spacing: 1px; margin: 0 0 2px; }
     .toolbar { font-family: system-ui, sans-serif; text-align: center; padding: 12px; background: #F7F9F6; border-bottom: 1px solid #E3E9E4; }
     .toolbar button, .toolbar a { font: inherit; padding: 10px 18px; border-radius: 10px; border: 1px solid #16834A; background: #16834A; color: #fff; text-decoration: none; margin: 0 4px; cursor: pointer; }
     .toolbar a { background: #fff; color: #16834A; }
@@ -46,7 +47,9 @@
     @if ($shop['address'])<div class="c small">{{ $shop['address'] }}</div>@endif
     @if ($shop['phone'])<div class="c small">{{ T::get('phone') }}: {{ $shop['phone'] }}</div>@endif
     <div class="hr"></div>
-    <div class="c order-no">{{ $order->order_number }}</div>
+    @php [$noPrefix, $noSeq] = \App\Support\ReceiptText::splitNumber($order->order_number); @endphp
+    @if ($noPrefix !== '')<div class="c order-no">{{ $noPrefix }}</div>@endif
+    <div class="c order-seq">{{ $noSeq }}</div>
     <div class="row small"><span>{{ $local->format('d-m-Y') }}</span><span>{{ $local->format('h:i A') }}</span></div>
     <div class="row small"><span>{{ T::get('type') }}</span><span>{{ T::orderType($order->order_type) }}</span></div>
     @if ($order->user)<div class="row small"><span>{{ T::get('served_by') }}</span><span>{{ $order->user->name }}</span></div>@endif

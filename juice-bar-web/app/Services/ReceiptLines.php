@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 /**
  * The receipt as ready-to-print text lines for a 58 mm thermal printer
  * (SUNMI V2s: 384 dots wide). Size 1 is the 24 px font, 32 characters a
- * line; size 2 is the 36 px font, 21 characters a line. The app only
+ * line; size 2 is the 36 px font, 21 characters a line; size 3 is extra big (order number). The app only
  * prints these lines, so the layout stays the same as the web receipt and
  * changes here reach every device without an app update.
  *
@@ -47,7 +47,11 @@ class ReceiptLines
             $out[] = $this->line(T::get('phone').': '.$p, 'center');
         }
         $out[] = ['divider' => true];
-        $out[] = $this->line($order->order_number, 'center', true, 2);
+        [$prefix, $seq] = T::splitNumber($order->order_number);
+        if ($prefix !== '') {
+            $out[] = $this->line($prefix, 'center', true);
+        }
+        $out[] = $this->line($seq, 'center', true, 3); // size 3: extra big, for calling the order
         $out[] = $this->two($local->format('d-m-Y'), $local->format('h:i A'));
         $out[] = $this->two(T::get('type'), T::orderType($order->order_type));
         if ($order->user) {
