@@ -33,7 +33,8 @@ class PosMenu
             ->map(fn (Product $p) => [
                 'id' => $p->id,
                 'category_id' => $p->category_id,
-                'name' => $p->name,
+                'name' => $p->posName(),
+                'name_en' => $p->name,
                 'sku' => $p->sku,
                 'image' => $p->imageUrl(),
                 'color' => $p->color,

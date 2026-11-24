@@ -46,7 +46,7 @@
     const q = query.trim().toLowerCase();
     const items = P.products.filter((p) =>
       (activeCat === 'all' || String(p.category_id) === activeCat) &&
-      (!q || p.name.toLowerCase().includes(q) || (p.sku || '').toLowerCase().includes(q)));
+      (!q || p.name.toLowerCase().includes(q) || (p.name_en || '').toLowerCase().includes(q) || (p.sku || '').toLowerCase().includes(q)));
 
     const grid = $('#pos-grid');
     if (!items.length) {

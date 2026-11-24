@@ -65,6 +65,12 @@ class Product extends Model
         return array_values(array_filter(array_map('intval', explode(',', (string) $this->season_months))));
     }
 
+    /** Name used on the POS, orders, reports and receipts (config pos.item_language). */
+    public function posName(): string
+    {
+        return config('pos.item_language') === 'bn' && filled($this->name_bn) ? $this->name_bn : $this->name;
+    }
+
     public function imageUrl(): ?string
     {
         return $this->image_path ? Storage::disk('public')->url($this->image_path) : null;

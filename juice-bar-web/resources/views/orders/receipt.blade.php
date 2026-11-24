@@ -1,10 +1,11 @@
 @php
     use App\Support\Money;
+    use App\Support\ReceiptText as T;
     $local = $order->localCreatedAt();
     $embed = request()->boolean('embed');
 @endphp
 <!doctype html>
-<html lang="en">
+<html lang="{{ config('pos.receipt_language') === 'bn' ? 'bn' : 'en' }}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -14,7 +15,7 @@
     @page { size: 58mm auto; margin: 0; }
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; background: #fff; color: #000; }
-    body { font-family: "Courier New", ui-monospace, monospace; font-size: 11px; line-height: 1.35; }
+    body { font-family: "Courier New", "Noto Sans Bengali", "Kalpurush", "SolaimanLipi", "Nirmala UI", "Vrinda", ui-monospace, monospace; font-size: 11px; line-height: 1.35; }
     .receipt { width: 48mm; margin: 0 auto; padding: 3mm 0 6mm; }
     .c { text-align: center; } .r { text-align: right; } .b { font-weight: 700; }
     .shop { font-size: 15px; font-weight: 700; letter-spacing: .5px; }
@@ -43,12 +44,12 @@
 <div class="receipt">
     <div class="c shop">{{ $shop['name'] }}</div>
     @if ($shop['address'])<div class="c small">{{ $shop['address'] }}</div>@endif
-    @if ($shop['phone'])<div class="c small">Phone: {{ $shop['phone'] }}</div>@endif
+    @if ($shop['phone'])<div class="c small">{{ T::get('phone') }}: {{ $shop['phone'] }}</div>@endif
     <div class="hr"></div>
     <div class="c order-no">{{ $order->order_number }}</div>
     <div class="row small"><span>{{ $local->format('d-m-Y') }}</span><span>{{ $local->format('h:i A') }}</span></div>
-    <div class="row small"><span>Type</span><span>{{ config('pos.order_types.'.$order->order_type, $order->order_type) }}</span></div>
-    @if ($order->user)<div class="row small"><span>Served by</span><span>{{ $order->user->name }}</span></div>@endif
+    <div class="row small"><span>{{ T::get('type') }}</span><span>{{ T::orderType($order->order_type) }}</span></div>
+    @if ($order->user)<div class="row small"><span>{{ T::get('served_by') }}</span><span>{{ $order->user->name }}</span></div>@endif
     <div class="hr"></div>
 
     @foreach ($order->items as $item)
@@ -56,8 +57,8 @@
             <div class="b">{{ $item->product_name }} ({{ $item->variant_name }})</div>
             <div class="row"><span>{{ $item->quantity }} x {{ Money::format(Money::of($item->unit_price)->plus(Money::of($item->addons_unit_total))) }}</span><span>{{ Money::format($item->line_total) }}</span></div>
             <div class="meta">
-                @if ($item->sugar !== null)Sugar {{ $item->sugar }}%@endif
-                @if ($item->ice) · {{ config('pos.ice_levels.'.$item->ice, $item->ice) }}@endif
+                @if ($item->sugar !== null){{ T::get('sugar') }} {{ $item->sugar }}%@endif
+                @if ($item->ice) · {{ T::ice($item->ice) }}@endif
                 @foreach ($item->addons as $a)<br>+ {{ $a->addon_name }} ({{ Money::format($a->price) }})@endforeach
                 @if ($item->note)<br>* {{ $item->note }}@endif
             </div>
@@ -65,36 +66,36 @@
     @endforeach
 
     <div class="hr"></div>
-    <div class="row"><span>Subtotal</span><span>{{ Money::format($order->subtotal) }}</span></div>
+    <div class="row"><span>{{ T::get('subtotal') }}</span><span>{{ Money::format($order->subtotal) }}</span></div>
     @if (Money::of($order->discount_total)->isPositive())
-        <div class="row"><span>Discount{{ $order->discount_type === 'percent' ? ' '.rtrim(rtrim((string) $order->discount_value, '0'), '.').'%' : '' }}</span><span>-{{ Money::format($order->discount_total) }}</span></div>
+        <div class="row"><span>{{ T::get('discount') }}{{ $order->discount_type === 'percent' ? ' '.rtrim(rtrim((string) $order->discount_value, '0'), '.').'%' : '' }}</span><span>-{{ Money::format($order->discount_total) }}</span></div>
     @endif
     @if (Money::of($order->tax_total)->isPositive())
-        <div class="row"><span>VAT {{ rtrim(rtrim((string) $order->tax_rate, '0'), '.') }}%{{ $order->tax_inclusive ? ' (incl.)' : '' }}</span><span>{{ Money::format($order->tax_total) }}</span></div>
+        <div class="row"><span>{{ T::get('vat') }} {{ rtrim(rtrim((string) $order->tax_rate, '0'), '.') }}%{{ $order->tax_inclusive ? ' ('.T::get('incl').')' : '' }}</span><span>{{ Money::format($order->tax_total) }}</span></div>
     @endif
     <div class="hr"></div>
-    <div class="row total"><span>TOTAL</span><span>Tk {{ Money::format($order->grand_total) }}</span></div>
+    <div class="row total"><span>{{ T::get('total') }}</span><span>{{ T::get('currency') }} {{ Money::format($order->grand_total) }}</span></div>
     <div class="hr"></div>
     @foreach ($order->payments as $p)
         <div class="row"><span>{{ $p->method_name }}@if($p->reference) <span class="small">#{{ $p->reference }}</span>@endif</span><span>{{ Money::format($p->amount) }}</span></div>
         @if ($p->tendered !== null)
-            <div class="row small"><span>&nbsp;Cash received</span><span>{{ Money::format($p->tendered) }}</span></div>
+            <div class="row small"><span>&nbsp;{{ T::get('cash_received') }}</span><span>{{ Money::format($p->tendered) }}</span></div>
         @endif
     @endforeach
     @if (Money::of($order->change_total)->isPositive())
-        <div class="row b"><span>CHANGE</span><span>{{ Money::format($order->change_total) }}</span></div>
+        <div class="row b"><span>{{ T::get('change') }}</span><span>{{ Money::format($order->change_total) }}</span></div>
     @endif
     @php $due = Money::of($order->grand_total)->minus(Money::of($order->paid_total)); @endphp
     @if ($order->status === 'cancelled')
-        <div class="c b" style="margin-top:4px">*** CANCELLED ***</div>
+        <div class="c b" style="margin-top:4px">{{ T::get('cancelled') }}</div>
     @elseif ($due->isPositive())
-        <div class="row b"><span>DUE</span><span>{{ Money::format($due) }}</span></div>
+        <div class="row b"><span>{{ T::get('due') }}</span><span>{{ Money::format($due) }}</span></div>
     @else
-        <div class="c b" style="margin-top:2px">PAID</div>
+        <div class="c b" style="margin-top:2px">{{ T::get('paid') }}</div>
     @endif
     <div class="hr"></div>
     @if ($shop['footer'])<div class="c small" style="margin-top:4px">{{ $shop['footer'] }}</div>@endif
-    <div class="c small">Items: {{ $order->items->sum('quantity') }}</div>
+    <div class="c small">{{ T::get('items') }}: {{ $order->items->sum('quantity') }}</div>
 </div>
 @if (request()->boolean('print') && ! $embed)
 <script>window.addEventListener('load', () => window.print());</script>

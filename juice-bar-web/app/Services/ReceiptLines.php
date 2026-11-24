@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Order;
 use App\Models\Setting;
 use App\Support\Money;
+use App\Support\ReceiptText as T;
 use Illuminate\Support\Str;
 
 /**
@@ -15,7 +16,9 @@ use Illuminate\Support\Str;
  * changes here reach every device without an app update.
  *
  * Each line: ['text' => string, 'align' => left|center|right, 'bold' => bool, 'size' => 1|2]
- * or ['divider' => true]. "Tk" is used instead of ৳ (printer fonts lack it).
+ * or ['divider' => true]. Two-sided lines also carry 'left' and 'right'.
+ * Words come from config pos.receipt_labels (Bangla by default); the SUNMI app
+ * draws the lines as an image, so Bangla and ৳ print correctly.
  */
 class ReceiptLines
 {
@@ -41,14 +44,14 @@ class ReceiptLines
             }
         }
         if ($p = Setting::get('shop_phone')) {
-            $out[] = $this->line('Phone: '.$p, 'center');
+            $out[] = $this->line(T::get('phone').': '.$p, 'center');
         }
         $out[] = ['divider' => true];
         $out[] = $this->line($order->order_number, 'center', true, 2);
-        $out[] = $this->line($this->pair($local->format('d-m-Y'), $local->format('h:i A')));
-        $out[] = $this->line($this->pair('Type', config('pos.order_types.'.$order->order_type, $order->order_type)));
+        $out[] = $this->two($local->format('d-m-Y'), $local->format('h:i A'));
+        $out[] = $this->two(T::get('type'), T::orderType($order->order_type));
         if ($order->user) {
-            $out[] = $this->line($this->pair('Served by', $order->user->name));
+            $out[] = $this->two(T::get('served_by'), $order->user->name);
         }
         $out[] = ['divider' => true];
 
@@ -57,13 +60,13 @@ class ReceiptLines
                 $out[] = $this->line($t, 'left', true);
             }
             $unit = Money::of($item->unit_price)->plus(Money::of($item->addons_unit_total));
-            $out[] = $this->line($this->pair(' '.$item->quantity.' x '.Money::format($unit), Money::format($item->line_total)));
+            $out[] = $this->two(' '.$item->quantity.' x '.Money::format($unit), Money::format($item->line_total));
             $meta = [];
             if ($item->sugar !== null) {
-                $meta[] = 'Sugar '.$item->sugar.'%';
+                $meta[] = T::get('sugar').' '.$item->sugar.'%';
             }
             if ($item->ice) {
-                $meta[] = config('pos.ice_levels.'.$item->ice, $item->ice);
+                $meta[] = T::ice($item->ice);
             }
             if ($meta) {
                 $out[] = $this->line('  '.implode(' | ', $meta));
@@ -79,35 +82,35 @@ class ReceiptLines
         }
 
         $out[] = ['divider' => true];
-        $out[] = $this->line($this->pair('Subtotal', Money::format($order->subtotal)));
+        $out[] = $this->two(T::get('subtotal'), Money::format($order->subtotal));
         if (Money::of($order->discount_total)->isPositive()) {
-            $label = 'Discount'.($order->discount_type === 'percent' ? ' '.$this->trim($order->discount_value).'%' : '');
-            $out[] = $this->line($this->pair($label, '-'.Money::format($order->discount_total)));
+            $label = T::get('discount').($order->discount_type === 'percent' ? ' '.$this->trim($order->discount_value).'%' : '');
+            $out[] = $this->two($label, '-'.Money::format($order->discount_total));
         }
         if (Money::of($order->tax_total)->isPositive()) {
-            $label = 'VAT '.$this->trim($order->tax_rate).'%'.($order->tax_inclusive ? ' (incl.)' : '');
-            $out[] = $this->line($this->pair($label, Money::format($order->tax_total)));
+            $label = T::get('vat').' '.$this->trim($order->tax_rate).'%'.($order->tax_inclusive ? ' ('.T::get('incl').')' : '');
+            $out[] = $this->two($label, Money::format($order->tax_total));
         }
         $out[] = ['divider' => true];
-        $out[] = $this->line($this->pair('TOTAL', 'Tk '.Money::format($order->grand_total), self::BIG_WIDTH), 'left', true, 2);
+        $out[] = $this->two(T::get('total'), T::get('currency').' '.Money::format($order->grand_total), true, 2);
         $out[] = ['divider' => true];
 
         foreach ($order->payments as $pay) {
-            $out[] = $this->line($this->pair($pay->method_name.($pay->reference ? ' #'.$pay->reference : ''), Money::format($pay->amount)));
+            $out[] = $this->two($pay->method_name.($pay->reference ? ' #'.$pay->reference : ''), Money::format($pay->amount));
             if ($pay->tendered !== null) {
-                $out[] = $this->line($this->pair(' Cash received', Money::format($pay->tendered)));
+                $out[] = $this->two(' '.T::get('cash_received'), Money::format($pay->tendered));
             }
         }
         if (Money::of($order->change_total)->isPositive()) {
-            $out[] = $this->line($this->pair('CHANGE', Money::format($order->change_total)), 'left', true);
+            $out[] = $this->two(T::get('change'), Money::format($order->change_total), true);
         }
         $due = Money::of($order->grand_total)->minus(Money::of($order->paid_total));
         if ($order->status === 'cancelled') {
-            $out[] = $this->line('*** CANCELLED ***', 'center', true);
+            $out[] = $this->line(T::get('cancelled'), 'center', true);
         } elseif ($due->isPositive()) {
-            $out[] = $this->line($this->pair('DUE', Money::format($due)), 'left', true);
+            $out[] = $this->two(T::get('due'), Money::format($due), true);
         } else {
-            $out[] = $this->line('PAID', 'center', true);
+            $out[] = $this->line(T::get('paid'), 'center', true);
         }
         $out[] = ['divider' => true];
         if ($f = Setting::get('receipt_footer', 'Thank you! Come again.')) {
@@ -115,9 +118,17 @@ class ReceiptLines
                 $out[] = $this->line($t, 'center');
             }
         }
-        $out[] = $this->line('Items: '.$order->items->sum('quantity'), 'center');
+        $out[] = $this->line(T::get('items').': '.$order->items->sum('quantity'), 'center');
 
         return $out;
+    }
+
+    /** Left and right text on one line: 'text' is padded for a plain-text printer, 'left'/'right' let the app draw them apart. */
+    private function two(string $left, string $right, bool $bold = false, int $size = 1): array
+    {
+        $width = $size === 2 ? self::BIG_WIDTH : self::WIDTH;
+
+        return $this->line($this->pair($left, $right, $width), 'left', $bold, $size) + ['left' => $left, 'right' => $right];
     }
 
     private function line(string $text, string $align = 'left', bool $bold = false, int $size = 1): array

@@ -30,6 +30,8 @@ Every route except `/login` needs `Authorization: Bearer <token>`.
 {"divider": true}
 ```
 
-- `size` 1 is the 24 px font (32 characters a line). `size` 2 is the 36 px font (21 characters a line).
-- The server already pads and cuts each line to fit, so changing the receipt never needs an app update.
-- "Tk" is printed in place of ৳, which printer fonts lack.
+- `size` 1 is normal text, `size` 2 is big text (the total).
+- Two-sided lines (label + amount) also have `left` and `right`. The app draws `left` at the left edge and `right` at the right edge.
+- `text` is the same line padded for a 32-column (`size` 1) or 21-column (`size` 2) plain-text printer.
+- The app draws the whole receipt as one image (384 dots wide), so Bangla and ৳ print correctly.
+- Receipt words come from `config/pos.php` `receipt_labels` in `POS_RECEIPT_LANG` (Bangla by default). `/menu` sends them as `receipt_labels` for receipts the app makes offline.

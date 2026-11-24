@@ -90,7 +90,7 @@ class OrderService
                 $item = $order->items()->create([
                     'product_id' => $line['variant']->product_id,
                     'product_variant_id' => $line['variant']->id,
-                    'product_name' => $line['variant']->product->name,
+                    'product_name' => $line['variant']->product->posName(),
                     'variant_name' => $line['variant']->name,
                     'unit_price' => Money::str($line['unit_price']),
                     'addons_unit_total' => Money::str($line['addons_unit_total']),

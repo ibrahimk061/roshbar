@@ -1,6 +1,11 @@
 package com.roshbar.pos;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Typeface;
 import android.os.RemoteException;
 import android.util.Log;
 
@@ -8,7 +13,6 @@ import com.sunmi.peripheral.printer.InnerPrinterCallback;
 import com.sunmi.peripheral.printer.InnerPrinterException;
 import com.sunmi.peripheral.printer.InnerPrinterManager;
 import com.sunmi.peripheral.printer.SunmiPrinterService;
-import com.sunmi.peripheral.printer.WoyouConsts;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -20,8 +24,6 @@ import org.json.JSONObject;
  */
 final class Printer {
     private static final String TAG = "RoshbarPrinter";
-    static final float FONT_NORMAL = 24f; // 32 characters a line
-    static final float FONT_BIG = 36f;    // 21 characters a line
     static final int WIDTH = 32;
 
     private static SunmiPrinterService service;
@@ -72,30 +74,84 @@ final class Printer {
                 case 3: return "Printer error. Restart the device.";
                 default: break;
             }
+            // Drawn as one image: Android shapes Bangla text and has the ৳ sign,
+            // which the printer's own text fonts do not.
+            Bitmap img = render(lines);
             s.enterPrinterBuffer(true);
             s.printerInit(null);
-            for (int i = 0; i < lines.length(); i++) {
-                JSONObject l = lines.optJSONObject(i);
-                if (l == null) continue;
-                if (l.optBoolean("divider")) {
-                    s.setAlignment(0, null);
-                    s.printTextWithFont(repeat('-', WIDTH) + "\n", "", FONT_NORMAL, null);
-                    continue;
-                }
-                String align = l.optString("align", "left");
-                s.setAlignment("center".equals(align) ? 1 : "right".equals(align) ? 2 : 0, null);
-                s.setPrinterStyle(WoyouConsts.ENABLE_BOLD, l.optBoolean("bold") ? WoyouConsts.ENABLE : WoyouConsts.DISABLE);
-                float size = l.optInt("size", 1) == 2 ? FONT_BIG : FONT_NORMAL;
-                s.printTextWithFont(l.optString("text", "") + "\n", "", size, null);
-            }
-            s.setPrinterStyle(WoyouConsts.ENABLE_BOLD, WoyouConsts.DISABLE);
+            s.setAlignment(1, null);
+            s.printBitmap(img, null);
             s.lineWrap(4, null);
             s.exitPrinterBuffer(true);
+            img.recycle();
             return null;
         } catch (RemoteException | RuntimeException e) {
             Log.e(TAG, "Print failed", e);
             return "Print failed: " + e.getMessage();
         }
+    }
+
+    static final int DOTS = 384;           // 58 mm paper, 8 dots per mm
+    private static final float PX_NORMAL = 24f;
+    private static final float PX_BIG = 34f;
+
+    /** The receipt lines as a black-on-white image 384 dots wide. */
+    static Bitmap render(JSONArray lines) {
+        Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
+        p.setColor(Color.BLACK);
+        int gap = 6;
+        int height = 8;
+        for (int i = 0; i < lines.length(); i++) {
+            JSONObject l = lines.optJSONObject(i);
+            if (l == null) continue;
+            if (l.optBoolean("divider")) { height += 14; continue; }
+            p.setTextSize(l.optInt("size", 1) == 2 ? PX_BIG : PX_NORMAL);
+            Paint.FontMetrics fm = p.getFontMetrics();
+            height += (int) Math.ceil(fm.descent - fm.ascent) + gap;
+        }
+        Bitmap b = Bitmap.createBitmap(DOTS, Math.max(height + 8, 16), Bitmap.Config.ARGB_8888);
+        Canvas c = new Canvas(b);
+        c.drawColor(Color.WHITE);
+        float y = 8;
+        for (int i = 0; i < lines.length(); i++) {
+            JSONObject l = lines.optJSONObject(i);
+            if (l == null) continue;
+            if (l.optBoolean("divider")) {
+                p.setStrokeWidth(2);
+                for (int x = 0; x < DOTS; x += 10) c.drawLine(x, y + 7, x + 6, y + 7, p);
+                y += 14;
+                continue;
+            }
+            p.setTextSize(l.optInt("size", 1) == 2 ? PX_BIG : PX_NORMAL);
+            p.setTypeface(l.optBoolean("bold") ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
+            Paint.FontMetrics fm = p.getFontMetrics();
+            float base = y - fm.ascent;
+            if (l.has("left") || l.has("right")) {
+                String right = l.optString("right", "");
+                float rw = p.measureText(right);
+                String left = fit(p, l.optString("left", ""), DOTS - rw - 12);
+                c.drawText(left, 0, base, p);
+                c.drawText(right, DOTS - rw, base, p);
+            } else {
+                String text = l.optString("text", "");
+                while (p.measureText(text) > DOTS && p.getTextSize() > 14) p.setTextSize(p.getTextSize() - 1);
+                text = fit(p, text, DOTS);
+                float w = p.measureText(text);
+                String align = l.optString("align", "left");
+                float x = "center".equals(align) ? (DOTS - w) / 2 : "right".equals(align) ? DOTS - w : 0;
+                c.drawText(text, x, base, p);
+            }
+            y += (fm.descent - fm.ascent) + gap;
+        }
+        return b;
+    }
+
+    /** Cut the text so it fits the width. */
+    private static String fit(Paint p, String s, float width) {
+        if (width <= 0) return "";
+        if (p.measureText(s) <= width) return s;
+        int n = p.breakText(s, true, width, null);
+        return s.substring(0, Math.max(0, n));
     }
 
     static String repeat(char ch, int n) {
