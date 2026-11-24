@@ -34,12 +34,19 @@ end-to-end slice so the counter flow can be seen early.
 - Website is view-only: the contact form was removed (owner's decision).
 - 57 automated tests.
 
+## ✅ Phase 3b — Hold / resume (done)
+
+- POS "Hold" parks the current cart with an optional name (e.g. "Table 3"); no order number is used.
+- "Held" button shows the count and a list (name, items, type, time, who, total at today's prices) with Resume / Delete.
+- Resume removes the held cart in a locked transaction, so two tills cannot resume the same one. If the cart on screen has items it is held first. Items no longer on the menu are left out with a notice.
+- Refunds/returns are **not** built: the owner decided the shop gives no refunds. Paid orders cannot be cancelled.
+- 63 automated tests.
+
 ## Next phases
 
 | # | Phase | Main items |
 |---|---|---|
 | 2 | Staff extras | Audit log, own-password change screen, staff name on receipt (login + roles already done in slice 2) |
-| 3b | Order extras | Hold/resume cart, refunds (full/partial) with reason, customer credit/due if the owner wants it |
 | 4 | Ingredients, recipes, inventory | Units & conversions, recipe per variation, add-on consumption, stock deduction on sale, purchases, suppliers, wastage, costing |
 | 5 | Expenses & cash sessions | Opening/closing cash, cash movements, expenses, reconciliation |
 | 6 | Dashboard & reports | Daily/weekly/monthly sales, item sales, gross contribution, exports |
@@ -49,7 +56,7 @@ end-to-end slice so the counter flow can be seen early.
 
 ## Known limitations
 
-- Paid orders cannot be cancelled until refunds are built.
+- Paid orders cannot be cancelled (no refunds by the owner's rule).
 - On phones the cart sits below the menu; the POS layout targets a tablet or counter screen first.
 - Browser printing depends on the printer driver's paper size being set to 58 mm.
 - Website prices are shown rounded to whole taka (as on the old site); the POS and receipt use exact paisa.

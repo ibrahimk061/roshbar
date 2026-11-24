@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\HeldCart;
 use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\Setting;
@@ -49,6 +50,7 @@ class PosController extends Controller
             'businessName' => Setting::get('business_name', config('pos.business_name')),
             'methods' => PaymentMethod::query()->active()->get(['code', 'name', 'is_cash', 'requires_reference']),
             'vatRate' => (string) Setting::get('vat_rate', '0'),
+            'heldCount' => HeldCart::query()->count(),
         ]);
     }
 }

@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\HeldCartController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PosController;
 use App\Http\Controllers\Site\SiteController;
@@ -41,6 +42,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/orders/{order}/payments', [OrderController::class, 'pay'])->name('orders.pay');
     Route::post('/orders/{order}/status', [OrderController::class, 'advance'])->name('orders.advance');
     Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+    Route::get('/pos/held', [HeldCartController::class, 'index'])->name('held.index');
+    Route::post('/pos/held', [HeldCartController::class, 'store'])->name('held.store');
+    Route::post('/pos/held/{heldCart}/resume', [HeldCartController::class, 'resume'])->name('held.resume');
+    Route::delete('/pos/held/{heldCart}', [HeldCartController::class, 'destroy'])->name('held.destroy');
 });
 
 /* ---------- Admin: owner + manager ---------- */

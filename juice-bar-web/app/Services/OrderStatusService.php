@@ -47,7 +47,7 @@ class OrderStatusService
                 throw ValidationException::withMessages(['reason' => 'Only open orders can be cancelled.']);
             }
             if (Money::of($order->paid_total)->isPositive()) {
-                throw ValidationException::withMessages(['reason' => 'This order has payments. Refunds come in a later phase; ask the owner.']);
+                throw ValidationException::withMessages(['reason' => 'This order is already paid, so it cannot be cancelled (the shop gives no refunds).']);
             }
 
             $from = $order->status;

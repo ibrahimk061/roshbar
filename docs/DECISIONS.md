@@ -23,6 +23,9 @@
 | Payments | Must equal the bill exactly; extra cash becomes change; no credit/due yet; one cash line per payment | `OrderService::preparePayments` |
 | Status flow | Forward only, can skip steps; Completed needs full payment | `OrderStatusService` |
 | Cancel | Owner/manager, reason required, unpaid orders only | `OrderStatusService` |
+| Refunds / returns | None: the shop gives no refunds (owner, 2026-11-24). Paid orders can't be cancelled | `OrderStatusService` |
+| Hold | Server-side held carts, shared by all tills, no order number until checkout; prices re-checked at checkout | `HeldCartService` |
+| Deploy | Build all phases first, deploy later when the owner asks (owner, 2026-11-24) | — |
 | Website | View only: no ordering and no contact form (owner, 2026-11-24) | — |
 | Live data | Old site's `.env` and database are never changed; import only reads | — |
 
@@ -33,6 +36,6 @@
 3. **Costing method** – Latest purchase price, weighted average, or FIFO for ingredient cost? (Phase 4)
 4. **VAT** – Is VAT charged? Inclusive or exclusive, and what rate? (Setting exists, default 0%)
 5. **Offline conflicts** – If an offline order uses an item that was deactivated or re-priced meanwhile, accept at the offline price or reject? (Phase 7)
-6. **Refund stock** – On refund, do ingredients go back to stock or count as wastage? (Phase 4)
+6. **Cancelled order stock** – If a made drink's order is cancelled, count the ingredients as wastage? (Phase 4)
 7. **Prefix** – `RB` = Roshbar, assumed final.
 8. **Deploy** – Same cPanel account as the old site? Then the domain's document root moves to `juice-bar-web/public` on switch-over day.
