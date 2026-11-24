@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\PaymentMethod;
 use App\Models\Setting;
+use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -53,8 +54,13 @@ class SettingController extends Controller
             'whatsapp.regex' => 'WhatsApp number: digits only with country code, e.g. 8801700000000.',
         ]);
 
+        $changed = [];
         foreach (array_keys(self::RULES) as $key) {
-            Setting::put($key, isset($data[$key]) ? (string) $data[$key] : null);
+            $new = isset($data[$key]) ? (string) $data[$key] : null;
+            if ((string) Setting::get($key) !== (string) $new) {
+                $changed[] = $key.': '.(Setting::get($key) ?? '—').' → '.($new ?? '—');
+            }
+            Setting::put($key, $new);
         }
 
         // Payment methods: at least one must stay on.
@@ -62,7 +68,16 @@ class SettingController extends Controller
         if ($on === []) {
             return back()->withErrors(['methods' => 'Keep at least one payment method on.'])->withInput();
         }
-        PaymentMethod::query()->each(fn (PaymentMethod $m) => $m->update(['is_active' => in_array($m->id, $on, true)]));
+        PaymentMethod::query()->each(function (PaymentMethod $m) use ($on, &$changed) {
+            $active = in_array($m->id, $on, true);
+            if ($m->is_active !== $active) {
+                $changed[] = $m->name.' '.($active ? 'on' : 'off');
+            }
+            $m->update(['is_active' => $active]);
+        });
+        if ($changed) {
+            ActivityLogger::log('settings.update', implode('; ', $changed));
+        }
 
         return back()->with('status', 'Settings saved.');
     }

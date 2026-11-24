@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -26,7 +27,8 @@ class UserController extends Controller
             'role' => ['required', Rule::in(array_keys(User::ROLES))],
             'password' => ['required', Password::min(8)],
         ]);
-        User::query()->create($data + ['is_active' => true]);
+        $new = User::query()->create($data + ['is_active' => true]);
+        ActivityLogger::log('user.create', $new->name.' ('.User::ROLES[$new->role].', '.$new->email.')', $new);
 
         return back()->with('status', "{$data['name']} can now sign in.");
     }
@@ -47,10 +49,22 @@ class UserController extends Controller
             return back()->withErrors(['role' => 'There must be at least one active owner.']);
         }
 
-        if (blank($data['password'])) {
+        if (blank($data['password'] ?? null)) {
             unset($data['password']);
         }
+        $notes = [];
+        foreach (['name', 'email', 'role', 'is_active'] as $k) {
+            if ((string) $user->{$k} !== (string) $data[$k]) {
+                $notes[] = $k === 'is_active' ? ($data[$k] ? 'switched on' : 'switched off') : "$k: {$user->{$k}} → {$data[$k]}";
+            }
+        }
+        if (isset($data['password'])) {
+            $notes[] = 'password reset';
+        }
         $user->update($data);
+        if ($notes) {
+            ActivityLogger::log('user.update', $user->name.': '.implode(', ', $notes), $user);
+        }
 
         return back()->with('status', "{$user->name} updated.");
     }

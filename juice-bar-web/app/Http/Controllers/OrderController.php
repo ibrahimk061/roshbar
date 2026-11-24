@@ -7,8 +7,10 @@ use App\Http\Requests\StoreOrderRequest;
 use App\Models\Order;
 use App\Models\PaymentMethod;
 use App\Models\Setting;
+use App\Services\ActivityLogger;
 use App\Services\OrderService;
 use App\Services\OrderStatusService;
+use App\Support\Money;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -66,7 +68,9 @@ class OrderController extends Controller
     public function pay(Request $request, Order $order, OrderService $service): RedirectResponse
     {
         $data = $request->validate(PaymentRules::rules() + ['payments' => ['required', 'array', 'min:1', 'max:5']], PaymentRules::messages());
-        $service->addPayments($order, $data['payments'], $request->user());
+        $before = $order->paid_total;
+        $order = $service->addPayments($order, $data['payments'], $request->user());
+        ActivityLogger::log('order.payment', $order->order_number.': ৳ '.Money::format(Money::of($order->paid_total)->minus(Money::of($before))).' received', $order);
 
         return redirect()->route('orders.show', $order)->with('status', 'Payment saved.');
     }

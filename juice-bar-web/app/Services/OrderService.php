@@ -98,6 +98,10 @@ class OrderService
 
             $order->statusHistory()->create(['from_status' => null, 'to_status' => 'new', 'user_id' => $user?->id]);
             $this->savePayments($order, $payments, $user);
+            if ($t['discount']->isPositive()) {
+                ActivityLogger::log('order.discount', $order->order_number.': ৳ '.Money::format($t['discount']).' off'
+                    .($t['discount_type'] === 'percent' ? ' ('.rtrim(rtrim((string) $t['discount_value'], '0'), '.').'%)' : '').' on ৳ '.Money::format($t['subtotal']).'. '.$t['discount_reason'], $order, $user);
+            }
 
             return $order->refresh();
         });
