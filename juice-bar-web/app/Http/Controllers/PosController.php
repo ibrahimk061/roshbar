@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\Setting;
 use Illuminate\View\View;
@@ -46,6 +47,8 @@ class PosController extends Controller
             'categories' => $categories,
             'products' => $products,
             'businessName' => Setting::get('business_name', config('pos.business_name')),
+            'methods' => PaymentMethod::query()->active()->get(['code', 'name', 'is_cash', 'requires_reference']),
+            'vatRate' => (string) Setting::get('vat_rate', '0'),
         ]);
     }
 }

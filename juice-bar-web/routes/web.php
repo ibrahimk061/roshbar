@@ -13,14 +13,13 @@ use App\Http\Controllers\Site\SiteController;
 use App\Http\Middleware\SetSiteLanguage;
 use Illuminate\Support\Facades\Route;
 
-/* ---------- Public website (roshbar.com) ---------- */
+/* ---------- Public website (roshbar.com): view only, no customer actions ---------- */
 Route::middleware(SetSiteLanguage::class)->group(function () {
     Route::get('/', [SiteController::class, 'home'])->name('site.home');
     Route::get('/menu', [SiteController::class, 'menu'])->name('site.menu');
     Route::get('/menu/{slug}', [SiteController::class, 'product'])->name('site.product');
     Route::get('/about', [SiteController::class, 'about'])->name('site.about');
     Route::get('/contact', [SiteController::class, 'contact'])->name('site.contact');
-    Route::post('/contact', [SiteController::class, 'send'])->name('site.contact.send');
 });
 
 /* ---------- Staff login ---------- */
@@ -36,7 +35,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/pos', [PosController::class, 'index'])->name('pos');
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
+    Route::post('/orders/quote', [OrderController::class, 'quote'])->name('orders.quote');
+    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
     Route::get('/orders/{order}/receipt', [OrderController::class, 'receipt'])->name('orders.receipt');
+    Route::post('/orders/{order}/payments', [OrderController::class, 'pay'])->name('orders.pay');
+    Route::post('/orders/{order}/status', [OrderController::class, 'advance'])->name('orders.advance');
+    Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
 });
 
 /* ---------- Admin: owner + manager ---------- */

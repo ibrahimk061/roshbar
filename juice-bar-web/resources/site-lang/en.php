@@ -90,7 +90,7 @@ return [
     'contact_title'  => 'Contact — Roshbar',
     'contact_eyebrow'=> 'Get in touch',
     'contact_h'      => "We'd love to *hear from you*",
-    'contact_p'      => 'Questions, catering for an office or event, or feedback on a drink. Send us a message and we will call you back.',
+    'contact_p'      => 'Questions, catering for an office or event, or feedback on a drink? Call or WhatsApp us, or drop by.',
     'f_name'         => 'Your name',
     'f_phone'        => 'Mobile number',
     'f_topic'        => 'Topic',
