@@ -1,0 +1,433 @@
+{
+ "categories": [
+  {
+   "id": 1,
+   "name_en": "Fresh juice",
+   "name_bn": "তাজা জুস",
+   "slug": "fresh-juice",
+   "sort_order": 1
+  },
+  {
+   "id": 2,
+   "name_en": "Seasonal",
+   "name_bn": "মৌসুমি",
+   "slug": "seasonal",
+   "sort_order": 2
+  },
+  {
+   "id": 3,
+   "name_en": "Smoothies & lassi",
+   "name_bn": "স্মুদি ও লাচ্ছি",
+   "slug": "smoothies",
+   "sort_order": 3
+  },
+  {
+   "id": 4,
+   "name_en": "Detox",
+   "name_bn": "ডিটক্স",
+   "slug": "detox",
+   "sort_order": 4
+  }
+ ],
+ "products": [
+  {
+   "id": 1,
+   "category_id": 2,
+   "name_en": "Himsagar Mango",
+   "name_bn": "হিমসাগর আম",
+   "slug": "himsagar-mango",
+   "description_en": "Pressed from ripe Rajshahi Himsagar. Thick, sweet and nothing added.",
+   "description_bn": "রাজশাহীর পাকা হিমসাগর থেকে বানানো। ঘন, মিষ্টি, কিছুই মেশানো নেই।",
+   "ingredients_en": "Himsagar mango, chilled water",
+   "ingredients_bn": "হিমসাগর আম, ঠান্ডা পানি",
+   "color": "#FFB000",
+   "garnish": "mango",
+   "calories": 180,
+   "is_seasonal": 1,
+   "season_months": "5,6,7",
+   "is_featured": 1,
+   "is_active": 1,
+   "sort_order": 0
+  },
+  {
+   "id": 2,
+   "category_id": 1,
+   "name_en": "Watermelon Mint",
+   "name_bn": "তরমুজ পুদিনা",
+   "slug": "watermelon-mint",
+   "description_en": "Watermelon with fresh mint and a pinch of black salt.",
+   "description_bn": "তাজা পুদিনা আর এক চিমটি বিট লবণ দিয়ে তরমুজ।",
+   "ingredients_en": "Watermelon, mint, black salt",
+   "ingredients_bn": "তরমুজ, পুদিনা, বিট লবণ",
+   "color": "#FF4D6D",
+   "garnish": "watermelon",
+   "calories": 90,
+   "is_seasonal": 0,
+   "season_months": null,
+   "is_featured": 1,
+   "is_active": 1,
+   "sort_order": 0
+  },
+  {
+   "id": 3,
+   "category_id": 1,
+   "name_en": "Green Daab",
+   "name_bn": "কচি ডাব",
+   "slug": "green-daab",
+   "description_en": "Young coconut water with soft coconut flesh.",
+   "description_bn": "নরম শাঁস সহ কচি ডাবের পানি।",
+   "ingredients_en": "Young coconut, coconut flesh",
+   "ingredients_bn": "কচি ডাব, ডাবের শাঁস",
+   "color": "#C9E37A",
+   "garnish": "mint",
+   "calories": 60,
+   "is_seasonal": 0,
+   "season_months": null,
+   "is_featured": 1,
+   "is_active": 1,
+   "sort_order": 0
+  },
+  {
+   "id": 4,
+   "category_id": 2,
+   "name_en": "Lychee Rose",
+   "name_bn": "লিচু গোলাপ",
+   "slug": "lychee-rose",
+   "description_en": "Dinajpur lychee with a light rose finish.",
+   "description_bn": "দিনাজপুরের লিচু, হালকা গোলাপের ঘ্রাণ সহ।",
+   "ingredients_en": "Lychee, rose water, lime",
+   "ingredients_bn": "লিচু, গোলাপ জল, লেবু",
+   "color": "#F7B6C2",
+   "garnish": "strawberry",
+   "calories": 120,
+   "is_seasonal": 1,
+   "season_months": "5,6",
+   "is_featured": 1,
+   "is_active": 1,
+   "sort_order": 0
+  },
+  {
+   "id": 5,
+   "category_id": 1,
+   "name_en": "Bel Sharbat",
+   "name_bn": "বেলের শরবত",
+   "slug": "bel-sharbat",
+   "description_en": "Wood apple pulp, jaggery and lime. The old summer cure.",
+   "description_bn": "বেলের শাঁস, গুড় আর লেবু। গরমের পুরোনো ওষুধ।",
+   "ingredients_en": "Bel, jaggery, lime",
+   "ingredients_bn": "বেল, গুড়, লেবু",
+   "color": "#D9A441",
+   "garnish": "lemon",
+   "calories": 150,
+   "is_seasonal": 0,
+   "season_months": null,
+   "is_featured": 0,
+   "is_active": 1,
+   "sort_order": 0
+  },
+  {
+   "id": 6,
+   "category_id": 3,
+   "name_en": "Mango Lassi",
+   "name_bn": "আমের লাচ্ছি",
+   "slug": "mango-lassi",
+   "description_en": "Mango blended with Bogura doi and cardamom.",
+   "description_bn": "বগুড়ার দই আর এলাচ দিয়ে আম।",
+   "ingredients_en": "Mango, yogurt, cardamom",
+   "ingredients_bn": "আম, দই, এলাচ",
+   "color": "#FFC94D",
+   "garnish": "mango",
+   "calories": 260,
+   "is_seasonal": 0,
+   "season_months": null,
+   "is_featured": 1,
+   "is_active": 1,
+   "sort_order": 0
+  },
+  {
+   "id": 7,
+   "category_id": 3,
+   "name_en": "Banana Date Shake",
+   "name_bn": "কলা খেজুর শেক",
+   "slug": "banana-date",
+   "description_en": "Banana, dates and milk. A full breakfast in a glass.",
+   "description_bn": "কলা, খেজুর আর দুধ। এক গ্লাসেই নাস্তা।",
+   "ingredients_en": "Banana, dates, milk",
+   "ingredients_bn": "কলা, খেজুর, দুধ",
+   "color": "#C89B6D",
+   "garnish": "berry",
+   "calories": 320,
+   "is_seasonal": 0,
+   "season_months": null,
+   "is_featured": 0,
+   "is_active": 1,
+   "sort_order": 0
+  },
+  {
+   "id": 8,
+   "category_id": 4,
+   "name_en": "Green Reset",
+   "name_bn": "গ্রিন রিসেট",
+   "slug": "green-reset",
+   "description_en": "Cucumber, spinach, green apple, ginger and lime.",
+   "description_bn": "শসা, পালং, সবুজ আপেল, আদা আর লেবু।",
+   "ingredients_en": "Cucumber, spinach, green apple, ginger, lime",
+   "ingredients_bn": "শসা, পালং, সবুজ আপেল, আদা, লেবু",
+   "color": "#4CB963",
+   "garnish": "mint",
+   "calories": 70,
+   "is_seasonal": 0,
+   "season_months": null,
+   "is_featured": 1,
+   "is_active": 1,
+   "sort_order": 0
+  },
+  {
+   "id": 9,
+   "category_id": 4,
+   "name_en": "Beet Glow",
+   "name_bn": "বিট গ্লো",
+   "slug": "beet-glow",
+   "description_en": "Beetroot, carrot, orange and turmeric.",
+   "description_bn": "বিটরুট, গাজর, কমলা আর হলুদ।",
+   "ingredients_en": "Beetroot, carrot, orange, turmeric",
+   "ingredients_bn": "বিটরুট, গাজর, কমলা, হলুদ",
+   "color": "#B3264B",
+   "garnish": "strawberry",
+   "calories": 110,
+   "is_seasonal": 0,
+   "season_months": null,
+   "is_featured": 1,
+   "is_active": 1,
+   "sort_order": 0
+  },
+  {
+   "id": 10,
+   "category_id": 2,
+   "name_en": "Jambura Chili",
+   "name_bn": "জাম্বুরা মরিচ",
+   "slug": "jambura-chili",
+   "description_en": "Pomelo with green chili and a little sugar. Sour, sweet, hot.",
+   "description_bn": "কাঁচা মরিচ আর অল্প চিনি দিয়ে জাম্বুরা। টক, মিষ্টি, ঝাল।",
+   "ingredients_en": "Pomelo, green chili, sugar, salt",
+   "ingredients_bn": "জাম্বুরা, কাঁচা মরিচ, চিনি, লবণ",
+   "color": "#FF8FA3",
+   "garnish": "orange",
+   "calories": 95,
+   "is_seasonal": 1,
+   "season_months": "8,9,10,11",
+   "is_featured": 1,
+   "is_active": 1,
+   "sort_order": 0
+  },
+  {
+   "id": 11,
+   "category_id": 2,
+   "name_en": "Amra Masala",
+   "name_bn": "আমড়া মসলা",
+   "slug": "amra-masala",
+   "description_en": "Hog plum with roasted cumin and black salt.",
+   "description_bn": "ভাজা জিরা আর বিট লবণ দিয়ে আমড়া।",
+   "ingredients_en": "Hog plum, cumin, black salt",
+   "ingredients_bn": "আমড়া, জিরা, বিট লবণ",
+   "color": "#B7C93B",
+   "garnish": "lemon",
+   "calories": 85,
+   "is_seasonal": 1,
+   "season_months": "9,10,11",
+   "is_featured": 0,
+   "is_active": 1,
+   "sort_order": 0
+  },
+  {
+   "id": 12,
+   "category_id": 1,
+   "name_en": "Malta Ginger",
+   "name_bn": "মাল্টা আদা",
+   "slug": "malta-ginger",
+   "description_en": "Green malta pressed with fresh ginger.",
+   "description_bn": "তাজা আদা দিয়ে সবুজ মাল্টা।",
+   "ingredients_en": "Malta, ginger",
+   "ingredients_bn": "মাল্টা, আদা",
+   "color": "#F2C230",
+   "garnish": "lemon",
+   "calories": 100,
+   "is_seasonal": 0,
+   "season_months": null,
+   "is_featured": 0,
+   "is_active": 1,
+   "sort_order": 0
+  }
+ ],
+ "product_sizes": [
+  {
+   "product_id": 1,
+   "label": "250ml",
+   "price": 180
+  },
+  {
+   "product_id": 1,
+   "label": "350ml",
+   "price": 240
+  },
+  {
+   "product_id": 1,
+   "label": "500ml",
+   "price": 320
+  },
+  {
+   "product_id": 2,
+   "label": "250ml",
+   "price": 140
+  },
+  {
+   "product_id": 2,
+   "label": "350ml",
+   "price": 190
+  },
+  {
+   "product_id": 2,
+   "label": "500ml",
+   "price": 250
+  },
+  {
+   "product_id": 3,
+   "label": "350ml",
+   "price": 160
+  },
+  {
+   "product_id": 3,
+   "label": "500ml",
+   "price": 220
+  },
+  {
+   "product_id": 4,
+   "label": "250ml",
+   "price": 200
+  },
+  {
+   "product_id": 4,
+   "label": "350ml",
+   "price": 260
+  },
+  {
+   "product_id": 5,
+   "label": "250ml",
+   "price": 120
+  },
+  {
+   "product_id": 5,
+   "label": "350ml",
+   "price": 160
+  },
+  {
+   "product_id": 6,
+   "label": "350ml",
+   "price": 220
+  },
+  {
+   "product_id": 6,
+   "label": "500ml",
+   "price": 290
+  },
+  {
+   "product_id": 7,
+   "label": "350ml",
+   "price": 230
+  },
+  {
+   "product_id": 7,
+   "label": "500ml",
+   "price": 300
+  },
+  {
+   "product_id": 8,
+   "label": "350ml",
+   "price": 250
+  },
+  {
+   "product_id": 8,
+   "label": "500ml",
+   "price": 330
+  },
+  {
+   "product_id": 9,
+   "label": "350ml",
+   "price": 240
+  },
+  {
+   "product_id": 9,
+   "label": "500ml",
+   "price": 320
+  },
+  {
+   "product_id": 10,
+   "label": "250ml",
+   "price": 150
+  },
+  {
+   "product_id": 10,
+   "label": "350ml",
+   "price": 200
+  },
+  {
+   "product_id": 11,
+   "label": "250ml",
+   "price": 130
+  },
+  {
+   "product_id": 11,
+   "label": "350ml",
+   "price": 170
+  },
+  {
+   "product_id": 12,
+   "label": "250ml",
+   "price": 150
+  },
+  {
+   "product_id": 12,
+   "label": "350ml",
+   "price": 200
+  },
+  {
+   "product_id": 12,
+   "label": "500ml",
+   "price": 270
+  }
+ ],
+ "settings": [
+  {
+   "key": "shop_phone",
+   "value": "+880 1700-000000"
+  },
+  {
+   "key": "shop_address",
+   "value": "House 12, Road 11, Banani, Dhaka 1213"
+  },
+  {
+   "key": "shop_hours",
+   "value": "Every day, 8am to 11pm"
+  },
+  {
+   "key": "shop_hours_bn",
+   "value": "প্রতিদিন, সকাল ৮টা থেকে রাত ১১টা"
+  },
+  {
+   "key": "shop_address_bn",
+   "value": "বাড়ি ১২, রোড ১১, বনানী, ঢাকা ১২১৩"
+  },
+  {
+   "key": "shop_email",
+   "value": "hello@roshbar.com"
+  },
+  {
+   "key": "whatsapp",
+   "value": "8801700000000"
+  },
+  {
+   "key": "map_query",
+   "value": "Banani Road 11, Dhaka"
+  }
+ ]
+}
