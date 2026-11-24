@@ -103,7 +103,7 @@
             <div class="jb-card p-3">
                 <h2 class="h6 fw-bold text-danger">Cancel order</h2>
                 @if (Money::of($order->paid_total)->isPositive())
-                    <p class="small text-muted mb-0">This order has payments, so it can't be cancelled here. Refunds come in a later phase.</p>
+                    <p class="small text-muted mb-0">This order is already paid, so it can't be cancelled. The shop gives no refunds.</p>
                 @else
                     <form method="post" action="{{ route('orders.cancel', $order) }}" onsubmit="return confirm('Cancel {{ $order->order_number }}? The number is not reused.')">
                         @csrf

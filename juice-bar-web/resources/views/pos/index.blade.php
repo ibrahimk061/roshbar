@@ -22,12 +22,15 @@
 
     {{-- Cart side --}}
     <aside class="pos-cart">
-        <div class="cart-head d-flex align-items-center justify-content-between">
-            <div class="fw-bold fs-5"><i class="bi bi-bag me-1"></i>Current order</div>
-            <div class="btn-group" role="group" aria-label="Order type">
+        <div class="cart-head d-flex align-items-center gap-2 flex-wrap">
+            <div class="fw-bold fs-5 text-nowrap"><i class="bi bi-bag me-1"></i>Order</div>
+            <button type="button" class="btn btn-sm btn-outline-primary text-nowrap" id="btn-held" title="Orders on hold">
+                <i class="bi bi-pause-circle me-1"></i>Held <span class="badge rounded-pill text-bg-primary" id="held-count">{{ $heldCount }}</span>
+            </button>
+            <div class="btn-group ms-auto" role="group" aria-label="Order type">
                 @foreach (config('pos.order_types') as $key => $label)
                     <input type="radio" class="btn-check" name="order_type" id="ot-{{ $key }}" value="{{ $key }}" @checked($loop->first)>
-                    <label class="btn btn-outline-primary" for="ot-{{ $key }}">{{ $label }}</label>
+                    <label class="btn btn-outline-primary text-nowrap" for="ot-{{ $key }}">{{ $label }}</label>
                 @endforeach
             </div>
         </div>
@@ -40,6 +43,7 @@
             </div>
             <div class="d-flex gap-2">
                 <button class="btn btn-outline-secondary btn-lg" id="btn-clear" title="Clear cart"><i class="bi bi-trash"></i></button>
+                <button class="btn btn-outline-primary btn-lg" id="btn-hold" title="Hold this order and serve the next customer" disabled><i class="bi bi-pause-fill"></i> Hold</button>
                 <button class="btn btn-primary btn-checkout flex-fill" id="btn-checkout" disabled>
                     <i class="bi bi-cash-coin me-1"></i> Checkout
                 </button>
@@ -126,6 +130,41 @@
     </div>
 </div>
 
+{{-- Hold modal --}}
+<div class="modal fade" id="hold-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content" id="hold-form">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold"><i class="bi bi-pause-circle me-1"></i>Hold order</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <label class="form-label fw-semibold" for="hold-label">Name (optional)</label>
+                <input type="text" class="form-control form-control-lg" id="hold-label" maxlength="60" placeholder="e.g. Table 3, Rahim bhai" autocomplete="off">
+                <div class="small text-muted mt-2">The cart is saved without an order number. Resume it any time from “Held”.</div>
+                <div class="text-danger small mt-2" id="hold-error" role="alert"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary btn-lg w-100" id="hold-save"><i class="bi bi-pause-fill me-1"></i>Hold</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- Held orders list --}}
+<div class="modal fade" id="held-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold"><i class="bi bi-pause-circle me-1"></i>Orders on hold</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="held-list"></div>
+            <div class="text-danger small px-3 pb-3" id="held-error" role="alert"></div>
+        </div>
+    </div>
+</div>
+
 {{-- Receipt preview modal --}}
 <div class="modal fade" id="receipt-modal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
@@ -158,8 +197,10 @@
         storeUrl: @json(route('orders.store')),
         quoteUrl: @json(route('orders.quote')),
         methods: @json($methods),
+        heldUrl: @json(route('held.index')),
+        orderTypes: @json(config('pos.order_types')),
         csrf: document.querySelector('meta[name=csrf-token]').content,
     };
 </script>
-<script src="{{ asset('js/pos.js') }}?v=3"></script>
+<script src="{{ asset('js/pos.js') }}?v=4"></script>
 @endpush

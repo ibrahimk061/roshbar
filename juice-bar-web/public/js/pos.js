@@ -173,6 +173,7 @@
     $('#cart-total').textContent = fmt(total);
     $('#cart-count').textContent = count;
     $('#btn-checkout').disabled = !state.lines.length;
+    $('#btn-hold').disabled = !state.lines.length;
   }
 
   function changed() { save(); renderCart(); $('#checkout-error').textContent = ''; }
@@ -412,6 +413,93 @@
   }
   $('#rc-print').addEventListener('click', () => { const f = $('#rc-frame'); f.contentWindow.focus(); f.contentWindow.print(); });
   $('#rc-new').addEventListener('click', () => { receiptModal.hide(); const f = $('#rc-frame'); f.onload = null; f.src = 'about:blank'; renderCart(); });
+
+  // ---------- hold / resume ----------
+  const holdModal = new bootstrap.Modal('#hold-modal');
+  const heldModal = new bootstrap.Modal('#held-modal');
+  const setHeldCount = (n) => { $('#held-count').textContent = n; };
+  const holdPayload = (label) => ({
+    label: label || null,
+    order_type: orderType(),
+    lines: state.lines.map((l) => ({ ...l, note: l.note || null })),
+  });
+  async function holdCurrent(label) {
+    const data = await post(P.heldUrl, holdPayload(label));
+    setHeldCount(data.held);
+    state = { uuid: null, lines: [] };
+    changed();
+    return data;
+  }
+
+  $('#btn-hold').addEventListener('click', () => {
+    if (!state.lines.length) return;
+    $('#hold-label').value = ''; $('#hold-error').textContent = '';
+    holdModal.show();
+    setTimeout(() => $('#hold-label').focus(), 300);
+  });
+  $('#hold-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = $('#hold-save'); btn.disabled = true;
+    try { await holdCurrent($('#hold-label').value.trim()); holdModal.hide(); }
+    catch (err) { $('#hold-error').textContent = netError(err); }
+    finally { btn.disabled = false; }
+  });
+
+  async function loadHeld() {
+    const box = $('#held-list');
+    $('#held-error').textContent = '';
+    box.innerHTML = '<div class="text-muted p-3"><span class="spinner-border spinner-border-sm me-2"></span>Loading…</div>';
+    try {
+      const res = await fetch(P.heldUrl, { headers: { Accept: 'application/json' } });
+      if (!res.ok) throw new Error('Could not load held orders.');
+      const rows = await res.json();
+      setHeldCount(rows.length);
+      box.innerHTML = rows.length ? rows.map((r) => `
+        <div class="held-row d-flex align-items-center gap-2 py-2 border-bottom" data-id="${r.id}">
+          <div class="flex-fill"><div class="fw-semibold">${esc(r.label)}</div>
+            <div class="small text-muted">${r.item_count} item${r.item_count === 1 ? '' : 's'} · ${esc(P.orderTypes[r.order_type] || r.order_type)} · ${esc(r.time)}${r.by ? ' · ' + esc(r.by) : ''}</div></div>
+          <div class="money fw-bold">৳ ${fmt(toPaisa(r.total))}</div>
+          <button class="btn btn-primary" data-act="resume">Resume</button>
+          <button class="btn btn-link text-danger" data-act="drop" aria-label="Delete"><i class="bi bi-trash"></i></button>
+        </div>`).join('') : '<div class="text-muted p-3 text-center">No orders on hold.</div>';
+    } catch (err) { box.innerHTML = ''; $('#held-error').textContent = netError(err); }
+  }
+  $('#btn-held').addEventListener('click', () => { heldModal.show(); loadHeld(); });
+
+  $('#held-list').addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-act]'); if (!b) return;
+    const id = b.closest('.held-row').dataset.id;
+    b.disabled = true;
+    try {
+      if (b.dataset.act === 'drop') {
+        if (!confirm('Delete this held order?')) { b.disabled = false; return; }
+        const res = await fetch(`${P.heldUrl}/${id}`, { method: 'DELETE', headers: { Accept: 'application/json', 'X-CSRF-TOKEN': P.csrf } });
+        if (!res.ok && res.status !== 404) throw new Error('Could not delete it. Try again.');
+        loadHeld();
+        return;
+      }
+      // Resume: park the current cart first so nothing is lost.
+      if (state.lines.length) {
+        if (!confirm('The current cart will be put on hold first. Continue?')) { b.disabled = false; return; }
+        await holdCurrent('');
+      }
+      const data = await post(`${P.heldUrl}/${id}/resume`, {});
+      const lines = (data.lines || []).filter((l) => {
+        const p = productsById[l.product_id];
+        return p && p.available && p.variants.some((v) => v.id === l.variant_id);
+      }).map((l) => ({ ...l, addon_ids: (l.addon_ids || []).filter((a) => productsById[l.product_id].addons.some((x) => x.id === a)), note: l.note || '' }));
+      const dropped = (data.lines || []).length - lines.length;
+      state = { uuid: null, lines };
+      const ot = document.getElementById('ot-' + data.order_type); if (ot) ot.checked = true;
+      changed();
+      heldModal.hide();
+      if (dropped > 0) $('#checkout-error').textContent = `${dropped} item${dropped === 1 ? ' is' : 's are'} no longer available and ${dropped === 1 ? 'was' : 'were'} left out.`;
+      loadHeldCountOnly();
+    } catch (err) { $('#held-error').textContent = netError(err); b.disabled = false; }
+  });
+  async function loadHeldCountOnly() {
+    try { const r = await fetch(P.heldUrl, { headers: { Accept: 'application/json' } }); if (r.ok) setHeldCount((await r.json()).length); } catch (e) { /* offline */ }
+  }
 
   renderGrid();
   renderCart();
