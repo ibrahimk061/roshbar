@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="{{ asset('vendor/bootstrap/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('vendor/bootstrap-icons/bootstrap-icons.min.css') }}">
     <link rel="icon" href="{{ site_asset('img/favicon.svg') }}" type="image/svg+xml">
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v=4">
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v=6">
     @stack('head')
 </head>
 <body>
@@ -23,9 +23,10 @@
             @php
                 $u = auth()->user();
                 $unreadMessages = $u?->canManage() ? \App\Models\Message::query()->where('is_read', false)->count() : 0;
-                $nav = [['pos', 'pos', 'bi-grid-3x3-gap', 'POS'], ['orders.index', 'orders.*', 'bi-receipt', 'Orders']];
+                $nav = [['pos', 'pos', 'bi-grid-3x3-gap', 'POS'], ['orders.index', 'orders.*', 'bi-receipt', 'Orders'], ['expenses.index', 'expenses.*', 'bi-wallet2', 'Expenses']];
                 if ($u?->canManage()) {
                     array_push($nav,
+                        ['admin.reports.sales', 'admin.reports.*', 'bi-bar-chart', 'Reports'],
                         ['admin.products.index', 'admin.products.*', 'bi-cup-straw', 'Products'],
                         ['admin.categories.index', 'admin.categories.*', 'bi-tags', 'Categories'],
                         ['admin.addons.index', 'admin.addons.*', 'bi-plus-circle', 'Add-ons'],

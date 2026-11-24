@@ -42,14 +42,20 @@ end-to-end slice so the counter flow can be seen early.
 - Refunds/returns are **not** built: the owner decided the shop gives no refunds. Paid orders cannot be cancelled.
 - 63 automated tests.
 
+## ✅ Phase 6 — Sales report and daily expenses (done)
+
+The owner dropped ingredients, recipes and stock ("only items, price, qty") and asked for a sales report and daily expenses. Cash-drawer sessions are not built.
+
+- **Expenses** (all staff, nav "Expenses"): amount, category (Fruit & bazar, Ice, Milk, Cups & packaging, Rent, Electricity, Salary, Transport, Other; owner/manager can add or hide), paid by, note. Cashiers add today's expenses only and see today; owner/manager can pick a past date, edit and delete.
+- **Sales report** (owner/manager, nav "Reports"): Today / Yesterday / Last 7 days / This month / Last month or any date range. Shows sales, expenses, sales − expenses, average order, items sold (item, size, qty, amount) and add-ons, discounts/VAT, payments by method, not-paid amount, a by-day table (sales, expenses, sales − expenses) and sales by staff. Cancelled orders are counted but left out of totals.
+- **Excel (CSV)** download of the same report (UTF-8 with BOM so Excel shows it right).
+- 70 automated tests.
+
 ## Next phases
 
 | # | Phase | Main items |
 |---|---|---|
 | 2 | Staff extras | Audit log, own-password change screen, staff name on receipt (login + roles already done in slice 2) |
-| 4 | Ingredients, recipes, inventory | Units & conversions, recipe per variation, add-on consumption, stock deduction on sale, purchases, suppliers, wastage, costing |
-| 5 | Expenses & cash sessions | Opening/closing cash, cash movements, expenses, reconciliation |
-| 6 | Dashboard & reports | Daily/weekly/monthly sales, item sales, gross contribution, exports |
 | 7 | Offline PWA | Service worker, IndexedDB queue, sync with UUIDs (order UUID already in place) |
 | 8 | API v1 + SUNMI V2s Android app | Sanctum tokens, Java app, built-in printer |
 | 9 | Security, deployment, backups | Hardening, production setup |

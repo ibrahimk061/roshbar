@@ -7,9 +7,11 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\HeldCartController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PosController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\Site\SiteController;
 use App\Http\Middleware\SetSiteLanguage;
 use Illuminate\Support\Facades\Route;
@@ -46,11 +48,21 @@ Route::middleware('auth')->group(function () {
     Route::post('/pos/held', [HeldCartController::class, 'store'])->name('held.store');
     Route::post('/pos/held/{heldCart}/resume', [HeldCartController::class, 'resume'])->name('held.resume');
     Route::delete('/pos/held/{heldCart}', [HeldCartController::class, 'destroy'])->name('held.destroy');
+    Route::get('/expenses', [ExpenseController::class, 'index'])->name('expenses.index');
+    Route::post('/expenses', [ExpenseController::class, 'store'])->name('expenses.store');
+    Route::middleware('role:owner,manager')->group(function () {
+        Route::put('/expenses/{expense}', [ExpenseController::class, 'update'])->name('expenses.update');
+        Route::delete('/expenses/{expense}', [ExpenseController::class, 'destroy'])->name('expenses.destroy');
+        Route::post('/expense-categories', [ExpenseController::class, 'storeCategory'])->name('expenses.categories.store');
+        Route::put('/expense-categories/{category}', [ExpenseController::class, 'updateCategory'])->name('expenses.categories.update');
+    });
 });
 
 /* ---------- Admin: owner + manager ---------- */
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:owner,manager'])->group(function () {
     Route::redirect('/', '/admin/products');
+    Route::get('reports/sales', [ReportController::class, 'sales'])->name('reports.sales');
+    Route::get('reports/sales.csv', [ReportController::class, 'salesCsv'])->name('reports.sales.csv');
     Route::resource('categories', CategoryController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::resource('addons', AddonController::class)->only(['index', 'store', 'update']);
     Route::resource('products', ProductController::class)->except(['show', 'destroy']);
