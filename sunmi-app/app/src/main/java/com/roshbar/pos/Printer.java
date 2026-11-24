@@ -94,6 +94,7 @@ final class Printer {
     static final int DOTS = 384;           // 58 mm paper, 8 dots per mm
     private static final float PX_NORMAL = 24f;
     private static final float PX_BIG = 34f;
+    private static final float PX_HUGE = 64f; // size 3: order number
 
     /** The receipt lines as a black-on-white image 384 dots wide. */
     static Bitmap render(JSONArray lines) {
@@ -105,7 +106,7 @@ final class Printer {
             JSONObject l = lines.optJSONObject(i);
             if (l == null) continue;
             if (l.optBoolean("divider")) { height += 14; continue; }
-            p.setTextSize(l.optInt("size", 1) == 2 ? PX_BIG : PX_NORMAL);
+            p.setTextSize(px(l.optInt("size", 1)));
             Paint.FontMetrics fm = p.getFontMetrics();
             height += (int) Math.ceil(fm.descent - fm.ascent) + gap;
         }
@@ -122,7 +123,7 @@ final class Printer {
                 y += 14;
                 continue;
             }
-            p.setTextSize(l.optInt("size", 1) == 2 ? PX_BIG : PX_NORMAL);
+            p.setTextSize(px(l.optInt("size", 1)));
             p.setTypeface(l.optBoolean("bold") ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
             Paint.FontMetrics fm = p.getFontMetrics();
             float base = y - fm.ascent;
@@ -144,6 +145,10 @@ final class Printer {
             y += (fm.descent - fm.ascent) + gap;
         }
         return b;
+    }
+
+    private static float px(int size) {
+        return size == 3 ? PX_HUGE : size == 2 ? PX_BIG : PX_NORMAL;
     }
 
     /** Cut the text so it fits the width. */

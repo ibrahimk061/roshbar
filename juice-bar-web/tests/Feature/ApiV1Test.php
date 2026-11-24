@@ -93,7 +93,8 @@ class ApiV1Test extends TestCase
             ->assertJsonPath('order_number', 'RB-25-11-26-A0001')
             ->assertJsonPath('grand_total', '640.00')->assertJsonPath('change_total', '360.00')->assertJsonPath('payment_status', 'paid');
         $texts = collect($res->json('receipt'))->pluck('text')->filter()->values();
-        $this->assertContains('RB-25-11-26-A0001', $texts);
+        $this->assertContains('RB-25-11-26', $texts);
+        $this->assertSame(3, collect($res->json('receipt'))->firstWhere('text', 'A0001')['size']);
         $this->assertContains('PAID', $texts);
         $this->assertTrue($texts->contains(fn ($t) => str_contains($t, 'Sugar 50%') && str_contains($t, 'Less Ice')));
         // Every normal-size line fits the 32-column printer.
