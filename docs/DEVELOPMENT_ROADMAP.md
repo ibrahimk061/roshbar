@@ -68,11 +68,25 @@ The owner dropped ingredients, recipes and stock ("only items, price, qty") and 
 - Staff name on the receipt was already there ("Served by").
 - 76 automated tests.
 
+## ✅ Phase 7 — Offline POS (done)
+
+- A service worker (`public/sw.js`) keeps the POS page and its files. If the internet drops, the POS still opens and works on that device, as long as it was opened online once.
+- Taking an order offline:
+  - The payment screen shows totals worked out on the device and an "Offline" note.
+  - Confirming saves the order on the device with a temporary number (OFF-001…) and prints an offline receipt that says the order number comes later.
+- Sending offline orders:
+  - Orders are sent oldest first when the connection is back, and every 20 s.
+  - The same uuid means a re-send never makes a duplicate.
+  - An expired CSRF token is refreshed automatically (`/pos/csrf`). If the session was signed out, the POS asks to sign in again.
+- An offline order keeps the time it was taken, and its business date comes from that time, so a 23:30 order sent next morning counts for the night before. The server trusts this time only within the last 3 days and not in the future. The order is marked `was_offline` and stores `synced_at`.
+- Prices and discount rules are checked again on the server when the order arrives (see DECISIONS). An order the server refuses (for example, an item removed from the menu) stays in the "Offline orders" list with the reason, where you can Retry or Delete it.
+- The pill at the top of the cart shows Offline / To send / Sending with a count.
+- 80 automated tests.
+
 ## Next phases
 
 | # | Phase | Main items |
 |---|---|---|
-| 7 | Offline PWA | Service worker, IndexedDB queue, sync with UUIDs (order UUID already in place) |
 | 8 | API v1 + SUNMI V2s Android app | Sanctum tokens, Java app, built-in printer |
 | 9 | Security, deployment, backups | Hardening, production setup |
 

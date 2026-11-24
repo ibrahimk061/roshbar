@@ -214,21 +214,48 @@
     discount: discountPayload(),
   });
 
+  // err.offline = no connection (the request never reached the server); err.status = HTTP status.
+  const httpError = (msg, status) => Object.assign(new Error(msg), { status });
   async function post(url, body) {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': P.csrf },
-      body: JSON.stringify(body),
-    });
+    let res;
+    try {
+      res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': P.csrf },
+        body: JSON.stringify(body),
+      });
+    } catch (e) {
+      throw Object.assign(new Error('No connection to the server.'), { offline: true });
+    }
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      if (res.status === 419) throw new Error('Session expired. Reload the page and try again.');
-      if (res.status === 401) throw new Error('You were signed out. Reload the page and sign in.');
-      throw new Error(data.errors ? Object.values(data.errors)[0][0] : (data.message || 'Something went wrong.'));
+      if (res.status === 419) throw httpError('Session expired. Reload the page and try again.', 419);
+      if (res.status === 401) throw httpError('You were signed out. Reload the page and sign in.', 401);
+      if (res.status >= 500 || res.status === 0) throw httpError('The server had a problem. Try again in a moment.', res.status);
+      throw httpError(data.errors ? Object.values(data.errors)[0][0] : (data.message || 'Something went wrong.'), res.status);
     }
     return data;
   }
-  const netError = (err) => (err.message === 'Failed to fetch' ? 'No connection to the server. Nothing was charged; try again.' : err.message);
+  const netError = (err) => (err.offline ? 'No connection to the server. Nothing was charged; try again.' : err.message);
+
+  // Display-only totals when the server can't be reached. The server recalculates on sync.
+  function localQuote() {
+    const cart = cartPayload();
+    const sub = state.lines.reduce((s, l) => s + lineView(l).total, 0);
+    let disc = 0;
+    if (cart.discount) {
+      const v = toPaisa(cart.discount.value);
+      disc = cart.discount.type === 'percent' ? Math.floor((sub * v + 5000) / 10000) : v;
+      disc = Math.max(0, Math.min(disc, sub));
+    }
+    const net = sub - disc;
+    const r = toPaisa(P.vatRate || '0');
+    let tax = 0, grand = net;
+    if (r > 0 && P.vatInclusive) { tax = Math.floor((net * r + (10000 + r) / 2) / (10000 + r)); }
+    else if (r > 0) { tax = Math.floor((net * r + 5000) / 10000); grand = net + tax; }
+    const s = (p) => (p / 100).toFixed(2);
+    return { subtotal: s(sub), discount_total: s(disc), tax_total: s(tax), grand_total: s(grand), tax_rate: P.vatRate || '0', tax_inclusive: !!P.vatInclusive, offline: true };
+  }
 
   async function refreshQuote() {
     const seq = ++quoteSeq;
@@ -240,7 +267,12 @@
       $('#pay-error').textContent = '';
     } catch (err) {
       if (seq !== quoteSeq) return;
-      $('#pay-error').textContent = netError(err);
+      if (err.offline) {
+        quote = localQuote();
+        $('#pay-error').innerHTML = '<span class="text-warning-emphasis"><i class="bi bi-wifi-off me-1"></i>Offline: the order will be saved on this device and sent when the internet is back.</span>';
+      } else {
+        $('#pay-error').textContent = netError(err);
+      }
     }
     renderQuote();
   }
@@ -393,7 +425,22 @@
       save();
       renderCart();
     } catch (err) {
-      $('#pay-error').textContent = netError(err);
+      if (err.offline) {
+        // Keep the order on this device; it is sent (with the same uuid) when online.
+        const q = quote && quote.offline ? quote : localQuote();
+        const entry = Offline.add(payload, q, state.lines.map((l) => {
+          const x = lineView(l);
+          return { name: x.p.name, size: x.v.name, qty: l.quantity, total: x.total, addons: x.addons.map((a) => a.name) };
+        }), withPayment ? amounts.reduce((a, b) => a + b, 0) : 0,
+        withPayment ? payRows.reduce((c, r, i) => c + (methodsByCode[r.method]?.is_cash && r.tendered !== '' ? Math.max(0, toPaisa(r.tendered) - amounts[i]) : 0), 0) : 0);
+        payModal.hide();
+        showOfflineReceipt(entry);
+        state = { uuid: null, lines: [] };
+        save();
+        renderCart();
+      } else {
+        $('#pay-error').textContent = netError(err);
+      }
     } finally {
       busy = false; btn.innerHTML = label; btn.disabled = false;
       $('#pay-confirm').disabled = !quote || !payValid();
@@ -411,8 +458,36 @@
     frame.onload = () => { try { frame.contentWindow.focus(); frame.contentWindow.print(); } catch (e) { /* user can press Print */ } };
     receiptModal.show();
   }
+  function showOfflineReceipt(e) {
+    $('#rc-number').textContent = e.temp + ' (offline)';
+    $('#rc-change').textContent = e.paid === 0 ? 'Not paid yet' : (e.change > 0 ? `Change ৳ ${fmt(e.change)}` : '');
+    const t = new Date(e.created_offline_at);
+    const rows = e.lines.map((l) => `<div class="row"><span>${l.qty} x ${esc(l.name)} (${esc(l.size)})${l.addons.length ? '<br>&nbsp;+ ' + l.addons.map(esc).join(', ') : ''}</span><span>${fmt(l.total)}</span></div>`).join('');
+    const q = e.quote;
+    const html = `<!doctype html><html><head><meta charset="utf-8"><style>
+      body{font:12px/1.35 monospace;margin:0;padding:6px;width:58mm;color:#000}.c{text-align:center}.b{font-weight:bold}
+      .row{display:flex;justify-content:space-between;gap:6px}.hr{border-top:1px dashed #000;margin:4px 0}.t{font-size:15px}
+      @page{size:58mm auto;margin:0}</style></head><body>
+      <div class="c b t">${esc(P.businessName || '')}</div>
+      <div class="c">${t.toLocaleDateString('en-GB')} ${t.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
+      <div class="c b">OFFLINE ${esc(e.temp)}</div><div class="c">Order no. comes when online</div>
+      <div class="hr"></div>${rows}<div class="hr"></div>
+      <div class="row"><span>Subtotal</span><span>${fmt(toPaisa(q.subtotal))}</span></div>
+      ${toPaisa(q.discount_total) ? `<div class="row"><span>Discount</span><span>-${fmt(toPaisa(q.discount_total))}</span></div>` : ''}
+      ${toPaisa(q.tax_total) ? `<div class="row"><span>VAT ${esc(q.tax_rate)}%</span><span>${fmt(toPaisa(q.tax_total))}</span></div>` : ''}
+      <div class="row b t"><span>TOTAL</span><span>Tk ${fmt(toPaisa(q.grand_total))}</span></div>
+      ${e.paid ? `<div class="row"><span>Paid</span><span>${fmt(e.paid)}</span></div>` : '<div class="row b"><span>DUE</span><span>' + fmt(toPaisa(q.grand_total)) + '</span></div>'}
+      ${e.change ? `<div class="row b"><span>CHANGE</span><span>${fmt(e.change)}</span></div>` : ''}
+      <div class="hr"></div><div class="c">Served by ${esc(P.cashier || '')}</div></body></html>`;
+    const frame = $('#rc-frame');
+    frame.onload = () => { try { frame.contentWindow.focus(); frame.contentWindow.print(); } catch (x) { /* Print button */ } };
+    frame.removeAttribute('src');
+    frame.srcdoc = html;
+    receiptModal.show();
+  }
+
   $('#rc-print').addEventListener('click', () => { const f = $('#rc-frame'); f.contentWindow.focus(); f.contentWindow.print(); });
-  $('#rc-new').addEventListener('click', () => { receiptModal.hide(); const f = $('#rc-frame'); f.onload = null; f.src = 'about:blank'; renderCart(); });
+  $('#rc-new').addEventListener('click', () => { receiptModal.hide(); const f = $('#rc-frame'); f.onload = null; f.removeAttribute('srcdoc'); f.src = 'about:blank'; renderCart(); });
 
   // ---------- hold / resume ----------
   const holdModal = new bootstrap.Modal('#hold-modal');
@@ -500,6 +575,108 @@
   async function loadHeldCountOnly() {
     try { const r = await fetch(P.heldUrl, { headers: { Accept: 'application/json' } }); if (r.ok) setHeldCount((await r.json()).length); } catch (e) { /* offline */ }
   }
+
+  // ---------- offline queue ----------
+  // Orders taken without internet are kept in this browser and sent, oldest first,
+  // when the connection returns. The uuid makes re-sending safe (no duplicates).
+  const Offline = (() => {
+    const KEY = 'jb.pos.offline.v1';
+    let list = [];
+    try { list = JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { list = []; }
+    let syncing = false;
+    let authProblem = false;
+    const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) { /* storage full */ } render(); };
+
+    function add(payload, quoteData, lines, paid, change) {
+      const created = new Date().toISOString();
+      const n = (parseInt(localStorage.getItem('jb.pos.offline.seq') || '0', 10) || 0) + 1;
+      try { localStorage.setItem('jb.pos.offline.seq', String(n)); } catch (e) { /* ignore */ }
+      const entry = { uuid: payload.uuid, temp: 'OFF-' + String(n).padStart(3, '0'), payload: { ...payload, created_offline_at: created },
+        created_offline_at: created, quote: quoteData, lines, paid, change, status: 'pending', error: null };
+      list.push(entry);
+      persist();
+      return entry;
+    }
+
+    async function freshToken() {
+      try {
+        const r = await fetch(P.csrfUrl, { headers: { Accept: 'application/json' } });
+        if (r.ok && !r.redirected) { P.csrf = (await r.json()).token; return true; }
+      } catch (e) { /* offline */ }
+      return false;
+    }
+
+    async function sync() {
+      if (syncing || !list.some((e) => e.status === 'pending')) { render(); return; }
+      syncing = true; authProblem = false; render();
+      try {
+        for (const e of list.filter((x) => x.status === 'pending')) {
+          try {
+            let data;
+            try { data = await post(P.storeUrl, e.payload); }
+            catch (err) {
+              if (err.status === 419 && await freshToken()) data = await post(P.storeUrl, e.payload);
+              else throw err;
+            }
+            list = list.filter((x) => x.uuid !== e.uuid);
+            persist();
+            toast(`${e.temp} sent: ${data.order_number}`);
+          } catch (err) {
+            if (err.offline || err.status >= 500) break;                    // try again later
+            if (err.status === 401 || err.status === 419) { authProblem = true; break; }
+            e.status = 'failed'; e.error = err.message; persist();       // needs a person (e.g. item removed)
+          }
+        }
+      } finally { syncing = false; render(); }
+    }
+
+    function retry(uuid) { const e = list.find((x) => x.uuid === uuid); if (e) { e.status = 'pending'; e.error = null; persist(); sync(); } }
+    function drop(uuid) { list = list.filter((x) => x.uuid !== uuid); persist(); }
+
+    function render() {
+      const pill = $('#net-pill'); if (!pill) return;
+      const pending = list.filter((e) => e.status === 'pending').length;
+      const failed = list.filter((e) => e.status === 'failed').length;
+      const off = !navigator.onLine;
+      pill.hidden = !off && !pending && !failed;
+      pill.className = 'btn btn-sm net-pill ' + (failed || authProblem ? 'btn-danger' : (off ? 'btn-warning' : 'btn-outline-warning'));
+      pill.innerHTML = (off ? '<i class="bi bi-wifi-off me-1"></i>Offline' : (syncing ? '<span class="spinner-border spinner-border-sm me-1"></span>Sending' : '<i class="bi bi-cloud-upload me-1"></i>To send'))
+        + (pending + failed ? ` <span class="badge text-bg-light">${pending + failed}</span>` : '');
+      const box = $('#offline-list'); if (!box) return;
+      $('#offline-note').textContent = authProblem ? 'Sign in again (reload the page) to send these orders.' : (off ? 'No internet. Orders are kept on this device and sent automatically.' : '');
+      box.innerHTML = list.length ? list.map((e) => `
+        <div class="d-flex align-items-center gap-2 py-2 border-bottom" data-uuid="${esc(e.uuid)}">
+          <div class="flex-fill"><div class="fw-semibold">${esc(e.temp)} · ৳ ${fmt(toPaisa(e.quote.grand_total))}</div>
+            <div class="small text-muted">${new Date(e.created_offline_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} · ${e.lines.reduce((s, l) => s + l.qty, 0)} items · ${e.paid ? 'paid' : 'not paid'}</div>
+            ${e.status === 'failed' ? `<div class="small text-danger">${esc(e.error)}</div>` : ''}</div>
+          ${e.status === 'failed' ? '<button class="btn btn-sm btn-outline-primary" data-act="retry">Retry</button><button class="btn btn-sm btn-link text-danger" data-act="drop" aria-label="Delete"><i class="bi bi-trash"></i></button>'
+            : '<span class="badge text-bg-warning">Waiting</span>'}
+        </div>`).join('') : '<div class="text-muted text-center p-3">Nothing waiting. All orders are on the server.</div>';
+    }
+
+    return { add, sync, retry, drop, render, count: () => list.length };
+  })();
+
+  function toast(msg) {
+    const t = document.createElement('div');
+    t.className = 'pos-toast'; t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 4000);
+  }
+
+  const offlineModal = new bootstrap.Modal('#offline-modal');
+  $('#net-pill').addEventListener('click', () => { Offline.render(); offlineModal.show(); Offline.sync(); });
+  $('#offline-list').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-act]'); if (!b) return;
+    const uuid = b.closest('[data-uuid]').dataset.uuid;
+    if (b.dataset.act === 'retry') Offline.retry(uuid);
+    if (b.dataset.act === 'drop' && confirm('Delete this offline order? It will not be saved on the server.')) Offline.drop(uuid);
+  });
+  window.addEventListener('online', () => Offline.sync());
+  window.addEventListener('offline', () => Offline.render());
+  setInterval(() => Offline.sync(), 20000);
+  Offline.render();
+  Offline.sync();
 
   renderGrid();
   renderCart();

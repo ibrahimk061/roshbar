@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -10,7 +11,7 @@ class Order extends Model
 {
     protected $fillable = [
         'uuid', 'order_number', 'business_date', 'sequence', 'order_type', 'status',
-        'subtotal', 'discount_total', 'tax_total', 'grand_total', 'note', 'user_id',
+        'subtotal', 'discount_total', 'tax_total', 'grand_total', 'note', 'user_id', 'was_offline', 'synced_at',
         'discount_type', 'discount_value', 'discount_reason', 'tax_rate', 'tax_inclusive',
         'paid_total', 'change_total', 'payment_status',
         'completed_at', 'cancelled_at', 'cancelled_by', 'cancel_reason',
@@ -41,6 +42,8 @@ class Order extends Model
             'paid_total' => 'decimal:2',
             'change_total' => 'decimal:2',
             'completed_at' => 'datetime',
+            'was_offline' => 'boolean',
+            'synced_at' => 'datetime',
             'cancelled_at' => 'datetime',
         ];
     }
@@ -70,7 +73,7 @@ class Order extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function localCreatedAt(): \Carbon\CarbonInterface
+    public function localCreatedAt(): CarbonInterface
     {
         return $this->created_at->clone()->setTimezone(config('pos.timezone'));
     }

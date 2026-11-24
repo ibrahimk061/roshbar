@@ -24,6 +24,7 @@
     <aside class="pos-cart">
         <div class="cart-head d-flex align-items-center gap-2 flex-wrap">
             <div class="fw-bold fs-5 text-nowrap"><i class="bi bi-bag me-1"></i>Order</div>
+            <button type="button" class="btn btn-sm net-pill" id="net-pill" hidden title="Orders saved offline"></button>
             <button type="button" class="btn btn-sm btn-outline-primary text-nowrap" id="btn-held" title="Orders on hold">
                 <i class="bi bi-pause-circle me-1"></i>Held <span class="badge rounded-pill text-bg-primary" id="held-count">{{ $heldCount }}</span>
             </button>
@@ -165,6 +166,22 @@
     </div>
 </div>
 
+{{-- Offline orders waiting to be sent --}}
+<div class="modal fade" id="offline-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold"><i class="bi bi-cloud-upload me-1"></i>Offline orders</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="small text-muted mb-2" id="offline-note"></div>
+                <div id="offline-list"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- Receipt preview modal --}}
 <div class="modal fade" id="receipt-modal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
@@ -198,9 +215,20 @@
         quoteUrl: @json(route('orders.quote')),
         methods: @json($methods),
         heldUrl: @json(route('held.index')),
+        csrfUrl: @json(route('pos.csrf')),
+        vatRate: @json($vatRate),
+        vatInclusive: @json($vatInclusive),
+        businessName: @json($businessName),
+        cashier: @json(auth()->user()->name),
         orderTypes: @json(config('pos.order_types')),
         csrf: document.querySelector('meta[name=csrf-token]').content,
     };
 </script>
-<script src="{{ asset('js/pos.js') }}?v=4"></script>
+<script src="{{ asset('js/pos.js') }}?v=5"></script>
+<script>
+    // Offline support: cache the POS screen and its files (see public/sw.js).
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => navigator.serviceWorker.register('{{ asset('sw.js') }}').catch(() => {}));
+    }
+</script>
 @endpush

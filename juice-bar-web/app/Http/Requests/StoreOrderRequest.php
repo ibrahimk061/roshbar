@@ -21,6 +21,8 @@ class StoreOrderRequest extends FormRequest
             'uuid' => [$isQuote ? 'nullable' : 'required', 'uuid'],
             'order_type' => ['required', Rule::in(array_keys(config('pos.order_types')))],
             'note' => ['nullable', 'string', 'max:500'],
+            // Set by the POS when the order was taken offline and is being sent later.
+            'created_offline_at' => ['nullable', 'date'],
             'items' => ['required', 'array', 'min:1', 'max:100'],
             'items.*.variant_id' => ['required', 'integer'],
             'items.*.quantity' => ['required', 'integer', 'min:1', 'max:'.config('pos.max_quantity_per_line')],

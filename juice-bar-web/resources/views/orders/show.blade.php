@@ -13,6 +13,7 @@
         <h1 class="h3 fw-bold mb-1">{{ $order->order_number }}</h1>
         <div class="text-muted">{{ $order->localCreatedAt()->format('d-m-Y h:i A') }} · {{ config('pos.order_types.'.$order->order_type) }}@if($order->user) · {{ $order->user->name }}@endif</div>
         <div class="mt-2">@include('orders._badges', ['o' => $order])</div>
+        @if ($order->was_offline)<div class="small text-muted mt-1"><i class="bi bi-wifi-off me-1"></i>Taken offline, sent to the server {{ $order->synced_at?->setTimezone(config('pos.timezone'))->format('d-m-Y h:i A') }}</div>@endif
     </div>
     <div class="d-flex flex-wrap gap-2">
         @if ($next)
