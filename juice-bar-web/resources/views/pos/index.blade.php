@@ -41,7 +41,7 @@
             <div class="d-flex gap-2">
                 <button class="btn btn-outline-secondary btn-lg" id="btn-clear" title="Clear cart"><i class="bi bi-trash"></i></button>
                 <button class="btn btn-primary btn-checkout flex-fill" id="btn-checkout" disabled>
-                    <i class="bi bi-printer me-1"></i> Place order &amp; print
+                    <i class="bi bi-cash-coin me-1"></i> Checkout
                 </button>
             </div>
             <div class="text-danger small mt-2" id="checkout-error" role="alert"></div>
@@ -80,12 +80,59 @@
     </div>
 </div>
 
+{{-- Payment modal --}}
+<div class="modal fade" id="pay-modal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-fullscreen-md-down">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold"><i class="bi bi-cash-coin me-1"></i>Payment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-4">
+                    <div class="col-md-5">
+                        <div class="pay-summary">
+                            <div class="d-flex justify-content-between"><span>Subtotal</span><span class="money">৳ <span id="q-subtotal">0.00</span></span></div>
+                            <div class="d-flex justify-content-between text-danger" id="q-discount-row" hidden><span>Discount</span><span class="money">− ৳ <span id="q-discount">0.00</span></span></div>
+                            <div class="d-flex justify-content-between" id="q-tax-row" hidden><span id="q-tax-label">VAT</span><span class="money">৳ <span id="q-tax">0.00</span></span></div>
+                            <hr class="my-2">
+                            <div class="d-flex justify-content-between align-items-end"><span class="fw-semibold">Total</span><span class="pay-total money">৳ <span id="q-total">0.00</span></span></div>
+                        </div>
+                        <button type="button" class="btn btn-link px-0 mt-2" id="disc-toggle"><i class="bi bi-percent me-1"></i>Add discount</button>
+                        <div id="disc-box" hidden class="mt-1">
+                            <div class="input-group mb-2">
+                                <input type="radio" class="btn-check" name="disc-type" id="dt-amount" value="amount" checked>
+                                <label class="btn btn-outline-primary" for="dt-amount">৳</label>
+                                <input type="radio" class="btn-check" name="disc-type" id="dt-percent" value="percent">
+                                <label class="btn btn-outline-primary" for="dt-percent">%</label>
+                                <input type="number" step="0.01" min="0" class="form-control form-control-lg" id="disc-value" placeholder="0" aria-label="Discount">
+                            </div>
+                            <input type="text" class="form-control" id="disc-reason" maxlength="255" placeholder="Reason (required), e.g. regular customer">
+                        </div>
+                    </div>
+                    <div class="col-md-7">
+                        <div class="fw-semibold mb-2">Paid by</div>
+                        <div id="pay-rows"></div>
+                        <button type="button" class="btn btn-link px-0" id="pay-split"><i class="bi bi-plus-lg me-1"></i>Split payment</button>
+                    </div>
+                </div>
+                <div class="text-danger mt-2" id="pay-error" role="alert"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline-secondary btn-lg" id="pay-later" title="Save the order now, take payment later (e.g. dine-in)">Pay later</button>
+                <button class="btn btn-primary btn-lg flex-fill py-3 fw-bold" id="pay-confirm"><i class="bi bi-printer me-1"></i>Confirm &amp; print</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- Receipt preview modal --}}
 <div class="modal fade" id="receipt-modal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title fw-bold"><i class="bi bi-check-circle text-success me-1"></i>Order <span id="rc-number"></span></h5>
+                <span class="ms-auto fs-5 fw-bold text-success" id="rc-change"></span>
             </div>
             <div class="modal-body bg-light d-flex justify-content-center">
                 <iframe id="rc-frame" title="Receipt preview" style="width:240px;height:460px;border:1px solid #ddd;background:#fff"></iframe>
@@ -109,8 +156,10 @@
         defaultIce: @json(config('pos.default_ice')),
         maxQty: {{ (int) config('pos.max_quantity_per_line') }},
         storeUrl: @json(route('orders.store')),
+        quoteUrl: @json(route('orders.quote')),
+        methods: @json($methods),
         csrf: document.querySelector('meta[name=csrf-token]').content,
     };
 </script>
-<script src="{{ asset('js/pos.js') }}?v=2"></script>
+<script src="{{ asset('js/pos.js') }}?v=3"></script>
 @endpush

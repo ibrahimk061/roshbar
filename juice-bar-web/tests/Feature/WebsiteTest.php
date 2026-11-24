@@ -25,7 +25,7 @@ class WebsiteTest extends TestCase
         $this->get('/menu?c=detox')->assertOk()->assertSee('Green Reset')->assertDontSee('Himsagar Mango');
         $this->get('/menu/himsagar-mango')->assertOk()->assertSee('Himsagar Mango')->assertSee('৳320');
         $this->get('/about')->assertOk();
-        $this->get('/contact')->assertOk()->assertSee('name="_token"', false);
+        $this->get('/contact')->assertOk()->assertSee('House 12, Road 11');
     }
 
     public function test_bangla_toggle_is_remembered(): void
@@ -58,36 +58,12 @@ class WebsiteTest extends TestCase
         $this->get('/no-such-page')->assertNotFound()->assertSee('This page does not exist.');
     }
 
-    public function test_contact_form_saves_message(): void
+    public function test_website_is_view_only(): void
     {
-        $this->post('/contact', ['name' => 'Rahim', 'phone' => '01712345678', 'topic' => 'catering', 'message' => 'Juice for 50 people on Friday?'])
-            ->assertRedirect(url('contact').'#form');
-
-        $m = Message::query()->sole();
-        $this->assertSame('catering', $m->topic);
-        $this->assertFalse($m->is_read);
-        $this->get('/contact')->assertSee('alert-ok', false);
-    }
-
-    public function test_contact_form_validates_and_blocks_spam(): void
-    {
-        $this->post('/contact', ['name' => 'R', 'phone' => '12345', 'message' => 'short'])
-            ->assertRedirect()->assertSessionHas('contact_errors', fn ($e) => isset($e['name'], $e['phone'], $e['message']));
-
-        // honeypot
-        $this->post('/contact', ['name' => 'Bot', 'phone' => '01712345678', 'message' => 'Buy cheap things now!!', 'website' => 'x']);
+        $this->get('/contact')->assertOk()->assertDontSee('<form', false)->assertSee('wa.me', false);
+        $this->get('/')->assertDontSee('<form', false);
+        $this->get('/menu/himsagar-mango')->assertDontSee('<form', false);
+        $this->post('/contact', ['name' => 'Rahim', 'phone' => '01712345678', 'message' => 'Hello there friends'])->assertStatus(405);
         $this->assertSame(0, Message::query()->count());
-
-        // second message within a minute
-        $ok = ['name' => 'Rahim', 'phone' => '01712345678', 'message' => 'First message here.'];
-        $this->post('/contact', $ok);
-        $this->post('/contact', $ok)->assertSessionHas('contact_errors');
-        $this->assertSame(1, Message::query()->count());
-    }
-
-    public function test_contact_form_escapes_old_input(): void
-    {
-        $this->post('/contact', ['name' => '<script>x</script>', 'phone' => 'bad', 'message' => 'short']);
-        $this->get('/contact')->assertDontSee('<script>x</script>', false)->assertSee('&lt;script&gt;', false);
     }
 }

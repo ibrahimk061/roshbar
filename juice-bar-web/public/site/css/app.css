@@ -667,3 +667,4 @@ h3 { font-size: 1.2rem; }
   html { scroll-behavior: auto; }
 }
 .footer-bottom a { color: inherit; opacity: .75; }
+.map-tall { margin-top: 0; height: 100%; min-height: 420px; }

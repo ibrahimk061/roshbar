@@ -9,13 +9,16 @@ class StoreOrderRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // Auth & roles: Phase 2.
+        return $this->user() !== null;
     }
 
     public function rules(): array
     {
+        // The quote endpoint sends the same cart without uuid/payments.
+        $isQuote = $this->routeIs('orders.quote');
+
         return [
-            'uuid' => ['required', 'uuid'],
+            'uuid' => [$isQuote ? 'nullable' : 'required', 'uuid'],
             'order_type' => ['required', Rule::in(array_keys(config('pos.order_types')))],
             'note' => ['nullable', 'string', 'max:500'],
             'items' => ['required', 'array', 'min:1', 'max:100'],
@@ -26,6 +29,11 @@ class StoreOrderRequest extends FormRequest
             'items.*.addon_ids' => ['nullable', 'array', 'max:20'],
             'items.*.addon_ids.*' => ['integer'],
             'items.*.note' => ['nullable', 'string', 'max:255'],
+            'discount' => ['nullable', 'array'],
+            'discount.type' => ['nullable', Rule::in(['amount', 'percent'])],
+            'discount.value' => ['nullable', 'decimal:0,2', 'min:0', 'max:9999999999'],
+            'discount.reason' => ['nullable', 'string', 'max:255'],
+            ...PaymentRules::rules(),
         ];
     }
 
@@ -34,6 +42,8 @@ class StoreOrderRequest extends FormRequest
         return [
             'items.required' => 'The cart is empty.',
             'items.min' => 'The cart is empty.',
+            'discount.value.decimal' => 'Discount can have at most 2 decimal places.',
+            ...PaymentRules::messages(),
         ];
     }
 }

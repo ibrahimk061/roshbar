@@ -22,12 +22,24 @@ end-to-end slice so the counter flow can be seen early.
 - `php artisan roshbar:import-legacy` (read-only, repeatable, `--dry-run`).
 - 47 automated tests.
 
+## ✅ Phase 3 — Payments & order flow (done)
+
+- Payment methods table (Cash, bKash, Nagad, Card, Bank; on/off in Settings). bKash/Nagad need the TrxID.
+- POS checkout: server quote → discount (৳ or %, reason required, cashier limit) → VAT (0% default, on top or included) → pay by one or more methods; cash shows change with quick buttons; "Pay later" for dine-in.
+- Payments are stored per order (`order_payments`) with tendered cash, change, reference and who received it. Payments must add up exactly to the bill (no customer credit yet).
+- Order flow New → Preparing → Ready → Completed (steps can be skipped forward; completing needs full payment), every change in `order_status_histories`.
+- Cancel: owner/manager only, reason required, unpaid orders only (paid orders wait for refunds). The order number is kept, never reused.
+- Order detail page (items, payments, history, take payment, cancel); order list filters (open, status, not paid).
+- Receipt shows discount, VAT, each payment, cash received, change, PAID/DUE/CANCELLED, served by.
+- Website is view-only: the contact form was removed (owner's decision).
+- 57 automated tests.
+
 ## Next phases
 
 | # | Phase | Main items |
 |---|---|---|
 | 2 | Staff extras | Audit log, own-password change screen, staff name on receipt (login + roles already done in slice 2) |
-| 3 | Payments & order flow | Cash / bKash / Nagad / Card, split & partial, change due on receipt, discount, VAT (after decision), order status flow (New → Preparing → Ready → Completed), cancel with reason, hold/resume |
+| 3b | Order extras | Hold/resume cart, refunds (full/partial) with reason, customer credit/due if the owner wants it |
 | 4 | Ingredients, recipes, inventory | Units & conversions, recipe per variation, add-on consumption, stock deduction on sale, purchases, suppliers, wastage, costing |
 | 5 | Expenses & cash sessions | Opening/closing cash, cash movements, expenses, reconciliation |
 | 6 | Dashboard & reports | Daily/weekly/monthly sales, item sales, gross contribution, exports |
@@ -37,8 +49,7 @@ end-to-end slice so the counter flow can be seen early.
 
 ## Known limitations
 
-- No payment capture yet; orders are saved with status `new` and the receipt shows totals only.
-- Discount and VAT fields exist (always 0) and are not editable yet.
+- Paid orders cannot be cancelled until refunds are built.
 - On phones the cart sits below the menu; the POS layout targets a tablet or counter screen first.
 - Browser printing depends on the printer driver's paper size being set to 58 mm.
 - Website prices are shown rounded to whole taka (as on the old site); the POS and receipt use exact paisa.

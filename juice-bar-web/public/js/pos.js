@@ -190,47 +190,221 @@
     if (state.lines.length && confirm('Clear this order?')) { state = { uuid: null, lines: [] }; changed(); }
   });
 
-  // ---------- checkout ----------
+  // ---------- checkout: quote from the server, then payment ----------
+  const payModal = new bootstrap.Modal('#pay-modal');
   const receiptModal = new bootstrap.Modal('#receipt-modal');
+  const methodsByCode = Object.fromEntries(P.methods.map((m) => [m.code, m]));
+  let quote = null;      // server totals (strings)
+  let payRows = [];      // [{method, amount, tendered, reference}]
   let busy = false;
+  let quoteTimer = null;
+  let quoteSeq = 0;
 
-  $('#btn-checkout').addEventListener('click', async () => {
-    if (busy || !state.lines.length) return;
+  const orderType = () => document.querySelector('input[name=order_type]:checked').value;
+  const discountPayload = () => {
+    if ($('#disc-box').hidden) return null;
+    const value = $('#disc-value').value.trim();
+    if (!value || toPaisa(value) <= 0) return null;
+    return { type: document.querySelector('input[name=disc-type]:checked').value, value, reason: $('#disc-reason').value.trim() };
+  };
+  const cartPayload = () => ({
+    order_type: orderType(),
+    items: state.lines.map((l) => ({ variant_id: l.variant_id, quantity: l.quantity, sugar: l.sugar, ice: l.ice, addon_ids: l.addon_ids, note: l.note || null })),
+    discount: discountPayload(),
+  });
+
+  async function post(url, body) {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': P.csrf },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      if (res.status === 419) throw new Error('Session expired. Reload the page and try again.');
+      if (res.status === 401) throw new Error('You were signed out. Reload the page and sign in.');
+      throw new Error(data.errors ? Object.values(data.errors)[0][0] : (data.message || 'Something went wrong.'));
+    }
+    return data;
+  }
+  const netError = (err) => (err.message === 'Failed to fetch' ? 'No connection to the server. Nothing was charged; try again.' : err.message);
+
+  async function refreshQuote() {
+    const seq = ++quoteSeq;
+    $('#pay-confirm').disabled = true;
+    try {
+      const q = await post(P.quoteUrl, cartPayload());
+      if (seq !== quoteSeq) return;
+      quote = q;
+      $('#pay-error').textContent = '';
+    } catch (err) {
+      if (seq !== quoteSeq) return;
+      $('#pay-error').textContent = netError(err);
+    }
+    renderQuote();
+  }
+  const queueQuote = () => { clearTimeout(quoteTimer); quoteTimer = setTimeout(refreshQuote, 300); };
+
+  function renderQuote() {
+    const q = quote || { subtotal: '0', discount_total: '0', tax_total: '0', grand_total: '0', tax_rate: '0', tax_inclusive: false };
+    $('#q-subtotal').textContent = fmt(toPaisa(q.subtotal));
+    $('#q-discount').textContent = fmt(toPaisa(q.discount_total));
+    $('#q-discount-row').hidden = toPaisa(q.discount_total) === 0;
+    $('#q-tax').textContent = fmt(toPaisa(q.tax_total));
+    $('#q-tax-row').hidden = toPaisa(q.tax_rate) === 0;
+    $('#q-tax-label').textContent = `VAT ${q.tax_rate}%${q.tax_inclusive ? ' (included)' : ''}`;
+    $('#q-total').textContent = fmt(toPaisa(q.grand_total));
+    renderPayRows();
+    $('#pay-confirm').disabled = !quote || busy || !payValid();
+  }
+
+  // The last row always covers what is left; earlier rows have typed amounts.
+  function rowAmounts() {
+    const total = quote ? toPaisa(quote.grand_total) : 0;
+    let used = 0;
+    return payRows.map((r, i) => {
+      if (i === payRows.length - 1) return Math.max(0, total - used);
+      const a = toPaisa(r.amount || '0'); used += a; return a;
+    });
+  }
+  function payValid() {
+    const amounts = rowAmounts();
+    return payRows.every((r, i) => {
+      const m = methodsByCode[r.method];
+      if (!m || amounts[i] <= 0) return false;
+      if (m.requires_reference && !r.reference.trim()) return false;
+      if (m.is_cash && r.tendered !== '' && toPaisa(r.tendered) < amounts[i]) return false;
+      return true;
+    }) && payRows.filter((r) => methodsByCode[r.method]?.is_cash).length <= 1;
+  }
+
+  function renderPayRows() {
+    const amounts = rowAmounts();
+    const split = payRows.length > 1;
+    $('#pay-rows').innerHTML = payRows.map((r, i) => {
+      const m = methodsByCode[r.method] || {};
+      const last = i === payRows.length - 1;
+      const change = m.is_cash && r.tendered !== '' ? toPaisa(r.tendered) - amounts[i] : null;
+      const quick = m.is_cash ? [amounts[i], Math.ceil(amounts[i] / 10000) * 10000, 50000, 100000]
+        .filter((v, k, arr) => v >= amounts[i] && v > 0 && arr.indexOf(v) === k) : [];
+      return `<div class="pay-row" data-i="${i}">
+        <div class="opt-group mb-2">${P.methods.map((pm) => `
+          <input type="radio" class="btn-check" name="pm-${i}" id="pm-${i}-${pm.code}" value="${esc(pm.code)}" ${pm.code === r.method ? 'checked' : ''}>
+          <label class="btn btn-outline-primary" for="pm-${i}-${pm.code}">${esc(pm.name)}</label>`).join('')}
+          ${split ? `<button type="button" class="btn btn-link text-danger ms-auto" data-act="del" aria-label="Remove"><i class="bi bi-x-lg"></i></button>` : ''}
+        </div>
+        <div class="row g-2 align-items-center">
+          <div class="col-sm-5">${last
+            ? `<div class="small text-muted">Amount</div><div class="fs-5 fw-bold money">৳ ${fmt(amounts[i])}</div>`
+            : `<label class="small text-muted" for="pa-${i}">Amount</label><input type="number" step="0.01" min="0" class="form-control form-control-lg" id="pa-${i}" data-f="amount" value="${esc(r.amount)}">`}</div>
+          ${m.is_cash ? `<div class="col-sm-7"><label class="small text-muted" for="pt-${i}">Cash received</label>
+              <input type="number" step="0.01" min="0" class="form-control form-control-lg" id="pt-${i}" data-f="tendered" value="${esc(r.tendered)}" placeholder="${fmt(amounts[i])}"></div>
+            <div class="col-12 quick-cash d-flex gap-2 flex-wrap">${quick.map((v) => `<button type="button" class="btn btn-outline-secondary" data-cash="${v}">${v === amounts[i] ? 'Exact' : '৳ ' + fmt(v).replace('.00', '')}</button>`).join('')}</div>
+            <div class="col-12">${change !== null ? (change >= 0
+              ? `<span class="text-muted">Change</span> <span class="change-due money">৳ ${fmt(change)}</span>`
+              : `<span class="text-danger">Cash received is less than ৳ ${fmt(amounts[i])}</span>`) : ''}</div>` : ''}
+          ${m.requires_reference ? `<div class="col-sm-7"><label class="small text-muted" for="pr-${i}">${esc(m.name)} TrxID</label>
+              <input type="text" class="form-control form-control-lg" id="pr-${i}" data-f="reference" value="${esc(r.reference)}" maxlength="100" autocomplete="off"></div>` : ''}
+          ${!m.is_cash && !m.requires_reference ? `<div class="col-sm-7"><label class="small text-muted" for="pr-${i}">Reference (optional)</label>
+              <input type="text" class="form-control form-control-lg" id="pr-${i}" data-f="reference" value="${esc(r.reference)}" maxlength="100" autocomplete="off"></div>` : ''}
+        </div></div>`;
+    }).join('');
+    $('#pay-split').hidden = payRows.length >= 3;
+  }
+
+  // Typing in an input must not re-render (it would steal focus): update state, then refresh the parts around it.
+  $('#pay-rows').addEventListener('input', (e) => {
+    const f = e.target.dataset.f; if (!f) return;
+    const i = Number(e.target.closest('.pay-row').dataset.i);
+    payRows[i][f] = e.target.value;
+    if (f === 'reference') { $('#pay-confirm').disabled = !quote || busy || !payValid(); return; }
+    const pos = e.target.selectionStart; const id = e.target.id;
+    renderPayRows();
+    const el = document.getElementById(id); if (el) { el.focus(); try { el.setSelectionRange(pos, pos); } catch (x) { /* number input */ } }
+    $('#pay-confirm').disabled = !quote || busy || !payValid();
+  });
+  $('#pay-rows').addEventListener('change', (e) => {
+    if (!e.target.name?.startsWith('pm-')) return;
+    const i = Number(e.target.closest('.pay-row').dataset.i);
+    payRows[i] = { ...payRows[i], method: e.target.value, tendered: '', reference: '' };
+    renderQuote();
+  });
+  $('#pay-rows').addEventListener('click', (e) => {
+    const row = e.target.closest('.pay-row'); if (!row) return;
+    const i = Number(row.dataset.i);
+    const cash = e.target.closest('[data-cash]');
+    if (cash) { payRows[i].tendered = (Number(cash.dataset.cash) / 100).toFixed(2); renderQuote(); }
+    if (e.target.closest('[data-act=del]')) { payRows.splice(i, 1); renderQuote(); }
+  });
+  $('#pay-split').addEventListener('click', () => {
+    const amounts = rowAmounts();
+    // Freeze the current last row at half of what is left, the new row takes the rest.
+    const last = payRows[payRows.length - 1];
+    last.amount = (Math.floor(amounts[amounts.length - 1] / 2) / 100).toFixed(2);
+    const other = P.methods.find((m) => m.code !== last.method && !m.is_cash) || P.methods[0];
+    payRows.push({ method: other.code, amount: '', tendered: '', reference: '' });
+    renderQuote();
+  });
+  $('#disc-toggle').addEventListener('click', () => {
+    const box = $('#disc-box'); box.hidden = !box.hidden;
+    $('#disc-toggle').innerHTML = box.hidden ? '<i class="bi bi-percent me-1"></i>Add discount' : '<i class="bi bi-x me-1"></i>Remove discount';
+    if (!box.hidden) $('#disc-value').focus();
+    queueQuote();
+  });
+  ['#disc-value', '#disc-reason'].forEach((s) => $(s).addEventListener('input', queueQuote));
+  document.querySelectorAll('input[name=disc-type]').forEach((el) => el.addEventListener('change', queueQuote));
+
+  $('#btn-checkout').addEventListener('click', () => {
+    if (!state.lines.length) return;
+    if (!state.uuid) { state.uuid = uuid(); save(); }
+    quote = null;
+    payRows = [{ method: (P.methods.find((m) => m.is_cash) || P.methods[0]).code, amount: '', tendered: '', reference: '' }];
+    $('#disc-box').hidden = true; $('#disc-value').value = ''; $('#disc-reason').value = '';
+    $('#disc-toggle').innerHTML = '<i class="bi bi-percent me-1"></i>Add discount';
+    $('#pay-error').textContent = '';
+    renderQuote();
+    payModal.show();
+    refreshQuote();
+  });
+
+  async function placeOrder(withPayment) {
+    if (busy) return;
     busy = true;
-    const btn = $('#btn-checkout'); btn.disabled = true;
-    const label = btn.innerHTML; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving…';
-    if (!state.uuid) state.uuid = uuid();
-    save();
-
+    const btn = withPayment ? $('#pay-confirm') : $('#pay-later');
+    const label = btn.innerHTML;
+    btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving…';
+    const amounts = rowAmounts();
     const payload = {
       uuid: state.uuid,
-      order_type: document.querySelector('input[name=order_type]:checked').value,
-      items: state.lines.map((l) => ({ variant_id: l.variant_id, quantity: l.quantity, sugar: l.sugar, ice: l.ice, addon_ids: l.addon_ids, note: l.note || null })),
+      ...cartPayload(),
+      payments: withPayment ? payRows.map((r, i) => ({
+        method: r.method,
+        amount: i === payRows.length - 1 ? null : (amounts[i] / 100).toFixed(2),
+        tendered: methodsByCode[r.method]?.is_cash && r.tendered !== '' ? r.tendered : null,
+        reference: r.reference.trim() || null,
+      })) : [],
     };
-
     try {
-      const res = await fetch(P.storeUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': P.csrf },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        const first = data.errors ? Object.values(data.errors)[0][0] : (data.message || 'Could not save the order.');
-        throw new Error(res.status === 419 ? 'Session expired. Reload the page and try again.' : first);
-      }
+      const data = await post(P.storeUrl, payload);
+      payModal.hide();
       showReceipt(data);
       state = { uuid: null, lines: [] };
       save();
+      renderCart();
     } catch (err) {
-      $('#checkout-error').textContent = err.message === 'Failed to fetch' ? 'No connection to the server. Your cart is kept; try again.' : err.message;
+      $('#pay-error').textContent = netError(err);
     } finally {
-      busy = false; btn.innerHTML = label; renderCart();
+      busy = false; btn.innerHTML = label; btn.disabled = false;
+      $('#pay-confirm').disabled = !quote || !payValid();
     }
-  });
+  }
+  $('#pay-confirm').addEventListener('click', () => placeOrder(true));
+  $('#pay-later').addEventListener('click', () => placeOrder(false));
 
   function showReceipt(data) {
     $('#rc-number').textContent = data.order_number;
+    const change = toPaisa(data.change_total || '0');
+    $('#rc-change').textContent = data.payment_status !== 'paid' ? 'Not paid yet' : (change > 0 ? `Change ৳ ${fmt(change)}` : '');
     const frame = $('#rc-frame');
     frame.src = data.receipt_url + '?embed=1';
     frame.onload = () => { try { frame.contentWindow.focus(); frame.contentWindow.print(); } catch (e) { /* user can press Print */ } };

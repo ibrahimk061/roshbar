@@ -48,6 +48,7 @@
     <div class="c order-no">{{ $order->order_number }}</div>
     <div class="row small"><span>{{ $local->format('d-m-Y') }}</span><span>{{ $local->format('h:i A') }}</span></div>
     <div class="row small"><span>Type</span><span>{{ config('pos.order_types.'.$order->order_type, $order->order_type) }}</span></div>
+    @if ($order->user)<div class="row small"><span>Served by</span><span>{{ $order->user->name }}</span></div>@endif
     <div class="hr"></div>
 
     @foreach ($order->items as $item)
@@ -66,13 +67,31 @@
     <div class="hr"></div>
     <div class="row"><span>Subtotal</span><span>{{ Money::format($order->subtotal) }}</span></div>
     @if (Money::of($order->discount_total)->isPositive())
-        <div class="row"><span>Discount</span><span>-{{ Money::format($order->discount_total) }}</span></div>
+        <div class="row"><span>Discount{{ $order->discount_type === 'percent' ? ' '.rtrim(rtrim((string) $order->discount_value, '0'), '.').'%' : '' }}</span><span>-{{ Money::format($order->discount_total) }}</span></div>
     @endif
     @if (Money::of($order->tax_total)->isPositive())
-        <div class="row"><span>VAT</span><span>{{ Money::format($order->tax_total) }}</span></div>
+        <div class="row"><span>VAT {{ rtrim(rtrim((string) $order->tax_rate, '0'), '.') }}%{{ $order->tax_inclusive ? ' (incl.)' : '' }}</span><span>{{ Money::format($order->tax_total) }}</span></div>
     @endif
     <div class="hr"></div>
     <div class="row total"><span>TOTAL</span><span>Tk {{ Money::format($order->grand_total) }}</span></div>
+    <div class="hr"></div>
+    @foreach ($order->payments as $p)
+        <div class="row"><span>{{ $p->method_name }}@if($p->reference) <span class="small">#{{ $p->reference }}</span>@endif</span><span>{{ Money::format($p->amount) }}</span></div>
+        @if ($p->tendered !== null)
+            <div class="row small"><span>&nbsp;Cash received</span><span>{{ Money::format($p->tendered) }}</span></div>
+        @endif
+    @endforeach
+    @if (Money::of($order->change_total)->isPositive())
+        <div class="row b"><span>CHANGE</span><span>{{ Money::format($order->change_total) }}</span></div>
+    @endif
+    @php $due = Money::of($order->grand_total)->minus(Money::of($order->paid_total)); @endphp
+    @if ($order->status === 'cancelled')
+        <div class="c b" style="margin-top:4px">*** CANCELLED ***</div>
+    @elseif ($due->isPositive())
+        <div class="row b"><span>DUE</span><span>{{ Money::format($due) }}</span></div>
+    @else
+        <div class="c b" style="margin-top:2px">PAID</div>
+    @endif
     <div class="hr"></div>
     @if ($shop['footer'])<div class="c small" style="margin-top:4px">{{ $shop['footer'] }}</div>@endif
     <div class="c small">Items: {{ $order->items->sum('quantity') }}</div>

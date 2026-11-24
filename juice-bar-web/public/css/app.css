@@ -32,6 +32,7 @@ body { background: var(--jb-bg); color: var(--jb-text); }
   --bs-btn-color: var(--jb-primary); --bs-btn-border-color: var(--jb-primary);
   --bs-btn-hover-bg: var(--jb-primary); --bs-btn-hover-border-color: var(--jb-primary);
   --bs-btn-active-bg: var(--jb-primary); --bs-btn-active-border-color: var(--jb-primary);
+  --bs-btn-disabled-color: var(--jb-primary); --bs-btn-disabled-border-color: var(--jb-primary);
 }
 .btn-accent { background: var(--jb-orange); border-color: var(--jb-orange); color: #2b1a05; }
 .btn-accent:hover { background: #f28c26; border-color: #f28c26; color: #2b1a05; }
@@ -93,3 +94,12 @@ body { background: var(--jb-bg); color: var(--jb-text); }
   .pos-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); overflow: visible; }
   .cart-lines { max-height: none; }
 }
+
+/* payment modal */
+.pay-summary { background: #F7FBF8; border: 1px solid var(--jb-border); border-radius: var(--jb-radius); padding: 14px 16px; font-size: 1.05rem; }
+.pay-total { font-size: 2rem; font-weight: 800; color: var(--jb-primary-dark); }
+.pay-row { border: 1px solid var(--jb-border); border-radius: var(--jb-radius); padding: 12px; margin-bottom: 10px; }
+.pay-row .opt-group .btn { min-width: 0; min-height: 44px; }
+.quick-cash .btn { min-height: 44px; }
+.change-due { font-size: 1.4rem; font-weight: 800; color: var(--jb-primary-dark); }
+[hidden] { display: none !important; }

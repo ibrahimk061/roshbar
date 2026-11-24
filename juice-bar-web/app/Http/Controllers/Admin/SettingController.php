@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\PaymentMethod;
 use App\Models\Setting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,7 +24,12 @@ class SettingController extends Controller
         'map_query' => ['nullable', 'string', 'max:200'],
         'order_prefix' => ['required', 'string', 'max:6', 'regex:/^[A-Z0-9]+$/'],
         'receipt_footer' => ['nullable', 'string', 'max:200'],
+        'vat_rate' => ['required', 'decimal:0,2', 'min:0', 'max:100'],
+        'vat_inclusive' => ['required', 'in:0,1'],
+        'cashier_discount_limit' => ['required', 'decimal:0,2', 'min:0', 'max:100'],
     ];
+
+    private const DEFAULTS = ['vat_rate' => '0', 'vat_inclusive' => '0', 'cashier_discount_limit' => '10'];
 
     public function edit(): View
     {
@@ -31,10 +37,13 @@ class SettingController extends Controller
         foreach (array_keys(self::RULES) as $key) {
             $values[$key] = Setting::get($key);
         }
+        foreach (self::DEFAULTS as $key => $default) {
+            $values[$key] ??= $default;
+        }
         $values['business_name'] ??= config('pos.business_name');
         $values['order_prefix'] ??= config('pos.order_prefix');
 
-        return view('admin.settings', ['s' => $values]);
+        return view('admin.settings', ['s' => $values, 'methods' => PaymentMethod::query()->orderBy('sort_order')->get()]);
     }
 
     public function update(Request $request): RedirectResponse
@@ -45,8 +54,15 @@ class SettingController extends Controller
         ]);
 
         foreach (array_keys(self::RULES) as $key) {
-            Setting::put($key, $data[$key] ?? null);
+            Setting::put($key, isset($data[$key]) ? (string) $data[$key] : null);
         }
+
+        // Payment methods: at least one must stay on.
+        $on = array_map('intval', array_keys($request->input('methods', [])));
+        if ($on === []) {
+            return back()->withErrors(['methods' => 'Keep at least one payment method on.'])->withInput();
+        }
+        PaymentMethod::query()->each(fn (PaymentMethod $m) => $m->update(['is_active' => in_array($m->id, $on, true)]));
 
         return back()->with('status', 'Settings saved.');
     }
