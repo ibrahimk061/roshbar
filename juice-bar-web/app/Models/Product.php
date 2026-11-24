@@ -71,6 +71,34 @@ class Product extends Model
         return config('pos.item_language') === 'bn' && filled($this->name_bn) ? $this->name_bn : $this->name;
     }
 
+    /**
+     * POS tile icon when an item has no photo: the first keyword found in the
+     * item's English name, then its category slug, wins.
+     */
+    public const ICONS = [
+        'lassi' => '🥛',
+        'mango' => '🥭', 'watermelon' => '🍉', 'daab' => '🥥', 'coconut' => '🥥',
+        'lychee' => '🌹', 'rose' => '🌹', 'bel' => '🍈', 'banana' => '🍌',
+        'beet' => '🥕', 'carrot' => '🥕', 'green' => '🥬', 'detox' => '🥬',
+        'jambura' => '🍊', 'malta' => '🍊', 'orange' => '🍊', 'amra' => '🫒',
+        'lemon' => '🍋', 'pineapple' => '🍍', 'strawberry' => '🍓', 'grape' => '🍇',
+        'apple' => '🍎', 'guava' => '🍐', 'papaya' => '🍈', 'pomegranate' => '🍎',
+        'shake' => '🥤', 'smoothie' => '🥤', 'smoothies' => '🥤',
+    ];
+
+    /** Emoji shown on the POS tile when there is no photo. */
+    public function icon(): string
+    {
+        $haystack = strtolower($this->name.' '.($this->category?->slug ?? ''));
+        foreach (self::ICONS as $word => $icon) {
+            if (preg_match('/\\b'.preg_quote($word, '/').'\\b/', $haystack)) {
+                return $icon;
+            }
+        }
+
+        return '🧃';
+    }
+
     public function imageUrl(): ?string
     {
         return $this->image_path ? Storage::disk('public')->url($this->image_path) : null;

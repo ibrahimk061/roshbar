@@ -22,6 +22,7 @@ class PosMenu
             ->where('is_active', true)
             ->whereHas('category', fn ($q) => $q->where('is_active', true))
             ->with([
+                'category',
                 'variants' => fn ($q) => $q->where('is_active', true),
                 'addons' => fn ($q) => $q->where('is_active', true),
             ])
@@ -37,6 +38,7 @@ class PosMenu
                 'name_en' => $p->name,
                 'sku' => $p->sku,
                 'image' => $p->imageUrl(),
+                'icon' => $p->icon(),
                 'color' => $p->color,
                 'available' => (bool) $p->is_available,
                 'variants' => $p->variants->map(fn ($v) => [
