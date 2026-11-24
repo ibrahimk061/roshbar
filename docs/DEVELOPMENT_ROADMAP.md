@@ -83,6 +83,15 @@ The owner dropped ingredients, recipes and stock ("only items, price, qty") and 
 - The pill at the top of the cart shows Offline / To send / Sending with a count.
 - 80 automated tests.
 
+## 🟡 Phase 9 prep — Deployment ready (built, not deployed)
+
+- Step-by-step cPanel guide: [DEPLOY.md](DEPLOY.md). Nothing has been run on the live server.
+- `php artisan roshbar:check` lists what must be right before going live (debug off, https, key, database, writable folders).
+- `php artisan roshbar:backup` saves a gzipped database copy to `storage/app/backups/` and keeps 30 days. It runs every night at 23:45 Dhaka time once the cPanel cron for `schedule:run` is added.
+- Every page sends security headers (nosniff, SAMEORIGIN, Referrer-Policy, Permissions-Policy, and HSTS over https).
+- `.env.production.example` holds placeholders only.
+- 84 automated tests.
+
 ## 🟡 Phase 8 — API v1 + SUNMI V2s app (in progress)
 
 - API v1 for the app is done: token sign-in, menu, quote, place order (safe to retry), today's orders, receipt lines. See [API.md](API.md).
@@ -91,13 +100,14 @@ The owner dropped ingredients, recipes and stock ("only items, price, qty") and 
 - Android app in `sunmi-app/` (Java): sign-in, menu, item options, cart, discount, payment, printing on the built-in printer, reprint of today's orders, and an offline queue that sends orders when the internet is back. See [sunmi-app/README.md](../sunmi-app/README.md).
 - GitHub Actions builds the APK on every change to `sunmi-app/` (Actions → Android app (SUNMI) → Artifacts).
 - Still to try on the real V2s: printing, paper width, and the offline flow.
+- 93 automated tests.
 
 ## Next phases
 
 | # | Phase | Main items |
 |---|---|---|
 | 8 | API v1 + SUNMI V2s Android app | Sanctum tokens, Java app, built-in printer |
-| 9 | Security, deployment, backups | Hardening, production setup |
+| 9 | Go live | Follow DEPLOY.md when the owner says so |
 
 ## Known limitations
 
