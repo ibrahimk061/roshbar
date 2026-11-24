@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\AccountController;
+use App\Http\Controllers\Admin\ActivityController;
 use App\Http\Controllers\Admin\AddonController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\MessageController;
@@ -48,6 +50,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/pos/held', [HeldCartController::class, 'store'])->name('held.store');
     Route::post('/pos/held/{heldCart}/resume', [HeldCartController::class, 'resume'])->name('held.resume');
     Route::delete('/pos/held/{heldCart}', [HeldCartController::class, 'destroy'])->name('held.destroy');
+    Route::get('/account/password', [AccountController::class, 'edit'])->name('account.password');
+    Route::put('/account/password', [AccountController::class, 'update'])->name('account.password.update');
     Route::get('/expenses', [ExpenseController::class, 'index'])->name('expenses.index');
     Route::post('/expenses', [ExpenseController::class, 'store'])->name('expenses.store');
     Route::middleware('role:owner,manager')->group(function () {
@@ -78,6 +82,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:owner,manager'
         Route::get('users', [UserController::class, 'index'])->name('users.index');
         Route::post('users', [UserController::class, 'store'])->name('users.store');
         Route::put('users/{user}', [UserController::class, 'update'])->name('users.update');
+        Route::get('activity', [ActivityController::class, 'index'])->name('activity.index');
     });
 });
 

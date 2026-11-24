@@ -29,6 +29,7 @@
 | Inventory | Not used: no ingredients, recipes or stock (owner, 2026-11-24). Shop purchases are entered as expenses | — |
 | Expenses | Cashier: today only, add only. Owner/manager: any past date, edit, delete | `ExpenseService` |
 | Sales report | By business date; cancelled orders excluded; "Sales − expenses" is sales after discount incl. VAT minus expenses (not a full profit figure) | `SalesReportService` |
+| Activity log | Owner-only page; failed logins logged only for existing accounts; no deletes | `ActivityLogger` |
 | Website | View only: no ordering and no contact form (owner, 2026-11-24) | — |
 | Live data | Old site's `.env` and database are never changed; import only reads | — |
 

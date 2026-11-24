@@ -6,6 +6,7 @@ use App\Http\Requests\ExpenseRequest;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Models\PaymentMethod;
+use App\Services\ActivityLogger;
 use App\Services\BusinessDate;
 use App\Services\ExpenseService;
 use App\Support\Money;
@@ -50,6 +51,7 @@ class ExpenseController extends Controller
     public function store(ExpenseRequest $request, ExpenseService $service): RedirectResponse
     {
         $e = $service->save($request->validated(), $request->user());
+        ActivityLogger::log('expense.create', $this->describe($e), $e);
 
         return redirect()->route('expenses.index', ['date' => $e->expense_date->format('Y-m-d')])
             ->with('status', '৳ '.Money::format($e->amount).' expense saved.');
@@ -57,7 +59,9 @@ class ExpenseController extends Controller
 
     public function update(ExpenseRequest $request, Expense $expense, ExpenseService $service): RedirectResponse
     {
+        $before = $this->describe($expense);
         $service->save($request->validated(), $request->user(), $expense);
+        ActivityLogger::log('expense.update', $before.' → '.$this->describe($expense->fresh()), $expense);
 
         return redirect()->route('expenses.index', ['date' => $expense->expense_date->format('Y-m-d')])->with('status', 'Expense updated.');
     }
@@ -65,9 +69,15 @@ class ExpenseController extends Controller
     public function destroy(Expense $expense): RedirectResponse
     {
         $date = $expense->expense_date->format('Y-m-d');
+        ActivityLogger::log('expense.delete', $this->describe($expense), $expense);
         $expense->delete();
 
         return redirect()->route('expenses.index', ['date' => $date])->with('status', 'Expense deleted.');
+    }
+
+    private function describe(Expense $e): string
+    {
+        return $e->expense_date->format('d-m-Y').' '.$e->category->name.' ৳ '.Money::format($e->amount).($e->note ? ' ('.$e->note.')' : '');
     }
 
     public function storeCategory(Request $request): RedirectResponse

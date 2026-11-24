@@ -47,6 +47,8 @@
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-person-circle me-1"></i>{{ $u->name }}</a>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li><span class="dropdown-item-text small text-muted">{{ \App\Models\User::ROLES[$u->role] ?? $u->role }}</span></li>
+                            <li><a class="dropdown-item" href="{{ route('account.password') }}"><i class="bi bi-key me-1"></i>Change password</a></li>
+                            @if ($u->hasRole('owner'))<li><a class="dropdown-item" href="{{ route('admin.activity.index') }}"><i class="bi bi-clock-history me-1"></i>Activity</a></li>@endif
                             <li><a class="dropdown-item" href="{{ url('/') }}" target="_blank"><i class="bi bi-globe me-1"></i>View website</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><form method="post" action="{{ route('logout') }}">@csrf<button class="dropdown-item"><i class="bi bi-box-arrow-right me-1"></i>Sign out</button></form></li>

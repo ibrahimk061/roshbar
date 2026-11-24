@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -34,17 +36,25 @@ class LoginController extends Controller
 
         if (! Auth::attempt($credentials + ['is_active' => true], $request->boolean('remember'))) {
             RateLimiter::hit($key, 15 * 60);
+            // Only known accounts are logged (no record of random emails).
+            if ($known = User::query()->where('email', $credentials['email'])->first()) {
+                ActivityLogger::log('login.failed', 'Wrong password', $known, $known);
+            }
             throw ValidationException::withMessages(['email' => 'Email or password is wrong.'])->redirectTo(route('login'));
         }
 
         RateLimiter::clear($key);
         $request->session()->regenerate();
+        ActivityLogger::log('login', 'Signed in');
 
         return redirect()->intended(route('pos'));
     }
 
     public function logout(Request $request): RedirectResponse
     {
+        if ($request->user()) {
+            ActivityLogger::log('logout', 'Signed out');
+        }
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

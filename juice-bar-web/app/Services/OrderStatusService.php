@@ -54,6 +54,7 @@ class OrderStatusService
             // The order number is never reused (blueprint rule): the row stays, only its status changes.
             $order->update(['status' => 'cancelled', 'cancelled_at' => now(), 'cancelled_by' => $user->id, 'cancel_reason' => $reason]);
             $order->statusHistory()->create(['from_status' => $from, 'to_status' => 'cancelled', 'user_id' => $user->id, 'note' => $reason]);
+            ActivityLogger::log('order.cancel', $order->order_number.' (৳ '.Money::format($order->grand_total).'): '.$reason, $order, $user);
 
             return $order;
         });

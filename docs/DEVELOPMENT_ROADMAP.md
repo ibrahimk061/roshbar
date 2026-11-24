@@ -51,11 +51,27 @@ The owner dropped ingredients, recipes and stock ("only items, price, qty") and 
 - **Excel (CSV)** download of the same report (UTF-8 with BOM so Excel shows it right).
 - 70 automated tests.
 
+## ✅ Phase 2b — Staff extras (done)
+
+- **Change password**: every staff member, from the name menu (current password, new twice, min 8).
+- **Switched-off staff** are signed out on their next click (not only at the next login).
+- **Activity log** (owner only, name menu → Activity), filter by staff and action. It records:
+  - sign-ins, wrong passwords for known accounts, and sign-outs
+  - discounts, cancellations and later payments
+  - expenses added, edited or deleted
+  - product added or price changes
+  - settings changes
+  - staff added or edited
+  - own password changes
+
+  Rows are append-only.
+- Staff name on the receipt was already there ("Served by").
+- 76 automated tests.
+
 ## Next phases
 
 | # | Phase | Main items |
 |---|---|---|
-| 2 | Staff extras | Audit log, own-password change screen, staff name on receipt (login + roles already done in slice 2) |
 | 7 | Offline PWA | Service worker, IndexedDB queue, sync with UUIDs (order UUID already in place) |
 | 8 | API v1 + SUNMI V2s Android app | Sanctum tokens, Java app, built-in printer |
 | 9 | Security, deployment, backups | Hardening, production setup |

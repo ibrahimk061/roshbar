@@ -7,6 +7,7 @@ use App\Http\Requests\ProductRequest;
 use App\Models\Addon;
 use App\Models\Category;
 use App\Models\Product;
+use App\Services\ActivityLogger;
 use App\Support\Money;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -47,15 +48,25 @@ class ProductController extends Controller
     public function store(ProductRequest $request): RedirectResponse
     {
         $product = DB::transaction(fn () => $this->save(new Product, $request));
+        ActivityLogger::log('product.create', $product->name.': '.$this->prices($product), $product);
 
         return redirect()->route('admin.products.index')->with('status', "“{$product->name}” added.");
     }
 
     public function update(ProductRequest $request, Product $product): RedirectResponse
     {
+        $before = $this->prices($product);
         DB::transaction(fn () => $this->save($product, $request));
+        $after = $this->prices($product->fresh());
+        ActivityLogger::log('product.update', $product->name.($before === $after ? ' (prices unchanged)' : ': '.$before.' → '.$after), $product);
 
         return redirect()->route('admin.products.index')->with('status', "“{$product->name}” updated.");
+    }
+
+    private function prices(Product $product): string
+    {
+        return $product->variants()->where('is_active', true)->orderBy('sort_order')->get()
+            ->map(fn ($v) => $v->name.' '.$v->price)->implode(', ');
     }
 
     /** Quick toggle from the list: sold out / back in stock. */
