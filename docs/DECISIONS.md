@@ -16,6 +16,7 @@
 | Website + POS | One Laravel app, one product table (owner chose this on 2026-11-24) | — |
 | Imported old admins | Become Owner, keep their password | `roshbar:import-legacy` |
 | Roles | Owner: all · Manager: POS + admin, not staff · Cashier: POS + orders | `routes/web.php` |
+| Brand colours | White + green everywhere (website and POS share #16834A); old pink/berry removed 2026-11-24. Website tokens in `public/site/css/app.css` `:root`, POS tokens in `public/css/app.css` | CSS |
 | Live data | Old site's `.env` and database are never changed; import only reads | — |
 
 ## Open questions for the owner

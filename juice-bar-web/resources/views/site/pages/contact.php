@@ -22,15 +22,15 @@ $topic = old('topic', 'general');
           <div><h2><?= e(t('address')) ?></h2><p><?= e(setting_l('shop_address')) ?></p></div>
         </div>
         <div class="contact-card">
-          <span class="feature-ico" style="background:#FDE7EE;color:var(--berry)"><svg aria-hidden="true"><use href="#i-phone"/></svg></span>
+          <span class="feature-ico" ><svg aria-hidden="true"><use href="#i-phone"/></svg></span>
           <div><h2><?= e(t('phone')) ?></h2><a href="<?= e(phone_href()) ?>"><?= e(setting('shop_phone')) ?></a></div>
         </div>
         <div class="contact-card">
-          <span class="feature-ico" style="background:#E3F0FB;color:#1D6FB8"><svg aria-hidden="true"><use href="#i-drop"/></svg></span>
+          <span class="feature-ico" ><svg aria-hidden="true"><use href="#i-drop"/></svg></span>
           <div><h2><?= e(t('email')) ?></h2><a href="mailto:<?= e(setting('shop_email')) ?>"><?= e(setting('shop_email')) ?></a></div>
         </div>
         <div class="contact-card">
-          <span class="feature-ico" style="background:#FFF0D6;color:#D97706"><svg aria-hidden="true"><use href="#i-clock"/></svg></span>
+          <span class="feature-ico" ><svg aria-hidden="true"><use href="#i-clock"/></svg></span>
           <div><h2><?= e(t('hours')) ?></h2><p><?= e(setting_l('shop_hours')) ?></p></div>
         </div>
       </div>

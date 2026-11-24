@@ -25,7 +25,7 @@ $fruitIcon = ['orange' => 'i-orange', 'lemon' => 'i-lemon', 'kiwi' => 'i-kiwi', 
 
     <div class="hero-art" aria-hidden="true">
       <svg class="hero-splash"><use href="#i-splash"/></svg>
-      <?php partial('glass', ['color' => '#D6264F', 'garnish' => 'strawberry', 'class' => 'hero-glass', 'fill' => .86]); ?>
+      <?php partial('glass', ['color' => '#7DBE3C', 'garnish' => 'kiwi', 'class' => 'hero-glass', 'fill' => .86]); ?>
       <svg class="fruit f-orange"><use href="#i-orange"/></svg>
       <svg class="fruit f-orange2"><use href="#i-orange"/></svg>
       <svg class="fruit f-mango"><use href="#i-mango"/></svg>

@@ -2,7 +2,7 @@
 /** @var string $content */
 
 $title = $title ?? 'Roshbar';
-$theme = $theme ?? '#B8174E';
+$theme = $theme ?? '#16834A';
 $nav = [
     ''        => t('nav_home'),
     'menu'    => t('nav_menu'),

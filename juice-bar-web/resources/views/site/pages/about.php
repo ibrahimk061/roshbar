@@ -12,7 +12,7 @@ partial('banner', [
     <div class="about-art" aria-hidden="true">
       <div class="why-circle"></div>
       <?php partial('glass', ['color' => '#FFB000', 'garnish' => 'orange', 'class' => 'why-g1']); ?>
-      <?php partial('glass', ['color' => '#B3264B', 'garnish' => 'strawberry', 'class' => 'why-g2']); ?>
+      <?php partial('glass', ['color' => '#4CB963', 'garnish' => 'kiwi', 'class' => 'why-g2']); ?>
       <?php partial('glass', ['color' => '#C9E37A', 'garnish' => 'lemon', 'class' => 'why-g3']); ?>
       <svg class="fruit w-orange"><use href="#i-mango"/></svg>
       <svg class="leaf w-leaf"><use href="#i-mint"/></svg>
