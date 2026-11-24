@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 
 // Nightly database backup (needs the cPanel cron: * * * * * php artisan schedule:run).
 Schedule::command('roshbar:backup')->dailyAt('23:45')->timezone(config('pos.timezone'));
+
+// Remove expired app sign-in tokens.
+Schedule::command('sanctum:prune-expired --hours=24')->daily();

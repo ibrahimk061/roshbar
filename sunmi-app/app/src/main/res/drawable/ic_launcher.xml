@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Green cup on white: simple launcher icon. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp" android:height="48dp"
+    android:viewportWidth="48" android:viewportHeight="48">
+    <path android:fillColor="#FFFFFF" android:pathData="M24,2a22,22 0,1 1,0 44a22,22 0,1 1,0 -44z" />
+    <path android:fillColor="#16834A" android:pathData="M24,4a20,20 0,1 1,0 40a20,20 0,1 1,0 -40z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M15,15h18l-2.2,20.5a2,2 0,0 1,-2 1.8h-9.6a2,2 0,0 1,-2 -1.8z" />
+    <path android:fillColor="#16834A" android:pathData="M16.3,21h15.4l-0.5,4.5h-14.4z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M25,8h2.2l-1.6,7h-2.2z" />
+</vector>

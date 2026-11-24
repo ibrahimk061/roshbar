@@ -92,6 +92,16 @@ The owner dropped ingredients, recipes and stock ("only items, price, qty") and 
 - `.env.production.example` holds placeholders only.
 - 84 automated tests.
 
+## 🟡 Phase 8 — API v1 + SUNMI V2s app (in progress)
+
+- API v1 for the app is done: token sign-in, menu, quote, place order (safe to retry), today's orders, receipt lines. See [API.md](API.md).
+- The web POS and the app share one menu builder (`PosMenu`), so both always show the same items.
+- Receipt lines for the built-in printer are made on the server (`ReceiptLines`).
+- Android app in `sunmi-app/` (Java): sign-in, menu, item options, cart, discount, payment, printing on the built-in printer, reprint of today's orders, and an offline queue that sends orders when the internet is back. See [sunmi-app/README.md](../sunmi-app/README.md).
+- GitHub Actions builds the APK on every change to `sunmi-app/` (Actions → Android app (SUNMI) → Artifacts).
+- Still to try on the real V2s: printing, paper width, and the offline flow.
+- 93 automated tests.
+
 ## Next phases
 
 | # | Phase | Main items |
