@@ -4,6 +4,15 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
+    <!-- Android 11+ hides other apps unless listed here; without this the
+         SUNMI printer service can't be found ("Printer not found"). -->
+    <queries>
+        <package android:name="woyou.aidlservice.jiuiv5" />
+        <intent>
+            <action android:name="woyou.aidlservice.jiuiv5.IWoyouService" />
+        </intent>
+    </queries>
+
     <application
         android:allowBackup="false"
         android:icon="@drawable/ic_launcher"
