@@ -85,19 +85,32 @@ public class OrdersActivity extends Activity {
     }
 
     private void reprint(long id, String number) {
-        new AlertDialog.Builder(this).setMessage("Print " + number + " again?").setNegativeButton("Cancel", null)
-                .setPositiveButton("Print", (d, w) -> io.execute(() -> {
-                    String err;
-                    try {
-                        err = Printer.print(api.get("/orders/" + id + "/receipt").optJSONArray("receipt"));
-                    } catch (IOException e) {
-                        err = "No internet.";
-                    } catch (Api.ApiError e) {
-                        err = e.getMessage();
-                    }
-                    final String fe = err;
-                    runOnUiThread(() -> Toast.makeText(this, fe == null ? "Printed" : fe, Toast.LENGTH_LONG).show());
-                })).show();
+        // Load the receipt first and show it, so what you see is what prints.
+        io.execute(() -> {
+            JSONArray lines = null;
+            String err = null;
+            try {
+                lines = api.get("/orders/" + id + "/receipt").optJSONArray("receipt");
+            } catch (IOException e) {
+                err = "No internet.";
+            } catch (Api.ApiError e) {
+                err = e.getMessage();
+            }
+            final JSONArray fl = lines;
+            final String fe = err;
+            runOnUiThread(() -> {
+                if (fl == null) {
+                    Toast.makeText(this, fe, Toast.LENGTH_LONG).show();
+                    return;
+                }
+                new AlertDialog.Builder(this).setTitle(number).setView(Ui.receiptPreview(this, null, fl))
+                        .setNegativeButton("Close", null)
+                        .setPositiveButton("Print", (d, w) -> io.execute(() -> {
+                            String pe = Printer.print(fl);
+                            runOnUiThread(() -> Toast.makeText(this, pe == null ? "Printed" : pe, Toast.LENGTH_LONG).show());
+                        })).show();
+            });
+        });
     }
 
     @Override
