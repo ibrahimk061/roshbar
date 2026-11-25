@@ -783,7 +783,8 @@ public class PosActivity extends Activity {
         StringBuilder msg = new StringBuilder(orderNumber != null ? "Order " + orderNumber + " saved." : "No internet: order saved on this device. It gets its number when sent.");
         if (change > 0) msg.append("\n\nCHANGE: Tk ").append(Money.fmt(change));
         if (printErr != null) msg.append("\n\n").append(printErr);
-        AlertDialog.Builder b = new AlertDialog.Builder(this).setTitle(orderNumber != null ? orderNumber : "Saved offline").setMessage(msg.toString())
+        AlertDialog.Builder b = new AlertDialog.Builder(this).setTitle(orderNumber != null ? orderNumber : "Saved offline")
+                .setView(Ui.receiptPreview(this, msg.toString(), receipt))
                 .setPositiveButton("New order", null);
         if (receipt != null) b.setNeutralButton("Print again", (d, w) -> printAsync(receipt));
         b.show();
@@ -941,7 +942,9 @@ public class PosActivity extends Activity {
                 loadMenu(true);
                 return true;
             case MENU_TEST:
-                printAsync(Receipts.test(menu));
+                JSONArray test = Receipts.test(menu);
+                new AlertDialog.Builder(this).setTitle("Test print").setView(Ui.receiptPreview(this, null, test))
+                        .setNegativeButton("Close", null).setPositiveButton("Print", (d, w) -> printAsync(test)).show();
                 return true;
             case MENU_SIGNOUT:
                 signOut();

@@ -1,6 +1,7 @@
 package com.roshbar.pos;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
@@ -10,8 +11,11 @@ import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import org.json.JSONArray;
 
 /** Small helpers to build screens in code (white + green brand). */
 final class Ui {
@@ -41,6 +45,8 @@ final class Ui {
         LinearLayout l = new LinearLayout(c);
         l.setOrientation(LinearLayout.HORIZONTAL);
         l.setGravity(Gravity.CENTER_VERTICAL);
+        // Baseline alignment shifts mixed Bangla/English buttons up and cuts their tops.
+        l.setBaselineAligned(false);
         return l;
     }
 
@@ -90,7 +96,9 @@ final class Ui {
         b.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
         b.setMinHeight(dp(c, 44));
         b.setMinWidth(dp(c, 56));
-        b.setPadding(dp(c, 12), 0, dp(c, 12), 0);
+        b.setPadding(dp(c, 14), dp(c, 4), dp(c, 14), dp(c, 4));
+        b.setStateListAnimator(null); // no raised shadow that gets clipped
+        b.setElevation(0);
         setChip(c, b, selected);
         return b;
     }
@@ -128,8 +136,33 @@ final class Ui {
     static LinearLayout.LayoutParams wrapMargin(Context c, int rightDp) {
         LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         p.rightMargin = dp(c, rightDp);
+        p.topMargin = dp(c, 3);
         p.bottomMargin = dp(c, 6);
         return p;
+    }
+
+    /** The exact receipt image the printer gets, scaled to fit, with an optional message above it. */
+    static View receiptPreview(Context c, String message, JSONArray lines) {
+        LinearLayout box = column(c, 16);
+        if (message != null && !message.isEmpty()) {
+            TextView t = text(c, message, 16, false, TEXT);
+            t.setPadding(0, 0, 0, dp(c, 10));
+            box.addView(t);
+        }
+        if (lines != null && lines.length() > 0) {
+            Bitmap bmp = Printer.render(lines);
+            ImageView img = new ImageView(c);
+            img.setImageBitmap(bmp);
+            img.setAdjustViewBounds(true);
+            img.setScaleType(ImageView.ScaleType.FIT_START);
+            int p = dp(c, 8);
+            img.setPadding(p, p, p, p);
+            img.setBackground(round(c, Color.WHITE, BORDER, 6));
+            box.addView(img, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        }
+        android.widget.ScrollView sv = new android.widget.ScrollView(c);
+        sv.addView(box);
+        return sv;
     }
 
     static View divider(Context c) {
