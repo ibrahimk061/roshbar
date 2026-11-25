@@ -28,6 +28,7 @@ final class Printer {
 
     private static SunmiPrinterService service;
     private static boolean binding;
+    private static Context app;
 
     private static final InnerPrinterCallback CALLBACK = new InnerPrinterCallback() {
         @Override
@@ -46,6 +47,7 @@ final class Printer {
     private Printer() {}
 
     static void bind(Context c) {
+        app = c.getApplicationContext();
         if (service != null || binding) return;
         try {
             binding = InnerPrinterManager.getInstance().bindService(c.getApplicationContext(), CALLBACK);
@@ -62,7 +64,16 @@ final class Printer {
     /** Returns null when printed, or a short reason to show the cashier. */
     static String print(JSONArray lines) {
         SunmiPrinterService s = service;
-        if (s == null) return "Printer not found (is this a SUNMI device?)";
+        if (s == null && app != null) {
+            // Not connected yet (or the service restarted): bind again and wait a little.
+            binding = false;
+            bind(app);
+            for (int i = 0; i < 30 && service == null; i++) {
+                try { Thread.sleep(100); } catch (InterruptedException e) { Thread.currentThread().interrupt(); break; }
+            }
+            s = service;
+        }
+        if (s == null) return "Printer not found. Restart the machine and try again.";
         if (lines == null || lines.length() == 0) return "Nothing to print";
         try {
             // SUNMI states: 1 ok, 2 starting, 3 error, 4 no paper, 5 too hot, 6 cover open, 505 no printer.
